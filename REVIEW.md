@@ -1,9 +1,8 @@
 ﻿# Revisão
 
-## Fase E0 — APROVADO (segunda revisão, 2026-11-13)
+## Fase E1 — APROVADO (segunda revisão, 2026-11-13)
 
-- `src/layout.js:49` limita a escala a `Math.min(..., 1)`. Imagens que já cabem não são ampliadas; imagens maiores são reduzidas para caber, preservando a proporção e sem corte. A interpretação está alinhada ao pedido de não esticar imagens pequenas e ao RF08.
-- `tests/layout.test.js:58-67` verifica que a imagem menor (3 × 2 cm) mantém exatamente suas dimensões originais, além da proporção e dos limites da área.
-- Não encontrei novo problema nos arquivos revisados. As três funções nomeadas permanecem exportadas; validação de tipos/limite, cálculo de escala e centralização seguem os contratos e os casos mínimos exigidos continuam cobertos.
+- `index.html:263-266` — correção confirmada: `.drop__dica` agora usa `font-size: 16px`, atendendo ao mínimo para instruções.
+- Releitura do `index.html` não identificou regressões nos fluxos de seleção/drag-and-drop, validação da extensão e do nome exato da aba, mensagens, carregamento local do ExcelJS, CSS/JS embutidos, etapas ou responsividade.
 
-Não executei `npm test`; esta revisão confirmou o código e as asserções por leitura.
+As alterações de `PLAN.md` e `TASKS.md` observadas anteriormente são atualizações de planejamento da transição de fase; não encontrei novo problema funcional nesta revisão.

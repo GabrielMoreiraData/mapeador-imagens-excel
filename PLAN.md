@@ -7,8 +7,8 @@ Atualizado: 2026-11-13
 
 | Fase | Descrição | Arquivos | Status |
 |------|-----------|----------|--------|
-| E0 | Dependências em `vendor/`; implementar funções puras em `src/layout.js`; testes Vitest passando | `vendor/`, `src/layout.js`, `tests/layout.test.js` | **Em andamento** |
-| E1 | Leitura do modelo `.xlsx` e validação da aba "Relatório de ensaio" | `index.html` | Aguardando E0 |
+| E0 | Dependências em `vendor/`; implementar funções puras em `src/layout.js`; testes Vitest passando | `vendor/`, `src/layout.js`, `tests/layout.test.js` | ✅ **APROVADO** (commit aa215c9) |
+| E1 | Leitura do modelo `.xlsx` e validação da aba "Relatório de ensaio" | `index.html` | **Em andamento** |
 | E2 | Carregamento de fotos (1–8), limite, erros bloqueantes | `index.html` | Aguardando E1 |
 | E3 | EXIF e ajuste sem corte (Canvas API) | `index.html`, `src/layout.js` | Aguardando E2 |
 | E4 | Inserção de fotos na capa e nos registros | `index.html`, `src/layout.js` | Aguardando E3 |

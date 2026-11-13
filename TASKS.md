@@ -1,6 +1,6 @@
 # Tarefa atual
 
-## Fase: E0
+## Fase: E1
 
 **Executor:** OpenCode (Construtor)  
 **Revisor:** Codex  
@@ -10,63 +10,60 @@
 
 ## Objetivo
 
-Implementar as três funções puras de `src/layout.js` e os testes correspondentes em `tests/layout.test.js`, garantindo que `npm test` passe sem erros.
+Implementar em `index.html` a leitura do arquivo `.xlsx` e a validação da aba "Relatório de ensaio" (RF01 e RF02), usando ExcelJS já presente em `vendor/exceljs.min.js`.
 
 ---
 
 ## Arquivos autorizados nesta fase
 
-- `src/layout.js`
-- `tests/layout.test.js`
+- `index.html`
 
-**Não alterar:** `index.html`, `vendor/`, `assets/`, `SPEC.md`, `AGENTS.md`, `PLAN.md`, `TASKS.md`.  
+**Não alterar:** `src/layout.js`, `tests/`, `vendor/`, `assets/`, `SPEC.md`, `AGENTS.md`, `PLAN.md`, `TASKS.md`.  
 Registrar conclusão em `STATUS.md`.
 
 ---
 
-## Funções a implementar em `src/layout.js`
+## O que implementar
 
-### 1. `validarFotos(lista, limite = 8)`
+### RF01 — Arrastar ou clicar para carregar o `.xlsx`
 
-- Recebe um array de objetos `{ nome, tipo }`.
-- Tipos aceitos: `image/jpeg`, `image/png`, `image/webp`.
-- Se `lista.length > limite`: retorna `{ ok: false, erro: "Máximo de 8 fotos. Envie até 8 imagens." }`.
-- Se algum item tiver tipo não aceito: retorna `{ ok: false, erro: "Formato não aceito: use JPG, PNG ou WEBP." }`.
-- Caso contrário: retorna `{ ok: true }`.
+- Área de drop visível na tela com texto instrucional (ex.: "Arraste o modelo .xlsx aqui ou clique para escolher").
+- Aceitar arquivo via drag-and-drop e via `<input type="file" accept=".xlsx">`.
+- Ao carregar, exibir o nome do arquivo na interface.
 
-### 2. `ajustarSemCorte(larguraOrig, alturaOrig, larguraAlvo, alturaAlvo)`
+### RF02 — Validar a aba "Relatório de ensaio"
 
-- Calcula a escala para que a imagem **caiba inteira** na área alvo sem cortar, mantendo proporção.
-- Retorna `{ largura, altura }` em cm (valores finais ≤ área alvo).
-- Exemplo: imagem 10×5 cm em área 6,8×6,5 cm → escala = min(6,8/10, 6,5/5) = 0,68 → `{ largura: 6,8, altura: 3,4 }`.
-
-### 3. `calcularPosicao(area, tamanhoFotoCm)`
-
-- `area`: `{ xCm, yCm, larguraCm, alturaCm }` — posição e tamanho da área na planilha.
-- `tamanhoFotoCm`: `{ largura, altura }` — tamanho final da foto após `ajustarSemCorte`.
-- Retorna `{ xCm, yCm }` centralizado dentro da área.
-- Fórmula: `xCm = area.xCm + (area.larguraCm − tamanhoFotoCm.largura) / 2`.
-- Fórmula: `yCm = area.yCm + (area.alturaCm − tamanhoFotoCm.altura) / 2`.
+- Usar `ExcelJS.Workbook` (carregado de `vendor/exceljs.min.js`) para ler o arquivo recebido como `ArrayBuffer`.
+- Verificar se existe uma aba com o nome exato **"Relatório de ensaio"** (acento e maiúscula incluídos).
+- Se existir: exibir mensagem de sucesso (ex.: "Modelo carregado com sucesso.") e habilitar a próxima etapa.
+- Se não existir: exibir erro claro na tela (ex.: "Arquivo inválido: aba 'Relatório de ensaio' não encontrada."). Nenhuma ação adicional.
+- O arquivo original nunca é alterado (RF11): apenas leitura nesta fase.
 
 ---
 
-## Testes mínimos exigidos em `tests/layout.test.js`
+## Requisitos de interface (seção 15 do SPEC)
 
-| Caso | Função | Resultado esperado |
-|------|--------|--------------------|
-| Lista vazia | `validarFotos` | `{ ok: true }` |
-| 8 fotos válidas | `validarFotos` | `{ ok: true }` |
-| 9 fotos | `validarFotos` | `{ ok: false, erro: contém "8" }` |
-| Tipo inválido (PDF) | `validarFotos` | `{ ok: false }` |
-| Imagem paisagem em área quadrada | `ajustarSemCorte` | largura e altura ≤ área alvo |
-| Imagem menor que a área | `ajustarSemCorte` | mantém proporção, não estica |
-| Centralização simétrica | `calcularPosicao` | `xCm` e `yCm` corretos |
+- Tema escuro azul-marinho, faixa laranja no topo.
+- Indicador de etapas visível: **1 Modelo → 2 Fotos → 3 Gerar** (etapa 1 ativa).
+- Erros exibidos em texto claro na tela (não apenas `alert()`).
+- Mínimo 14 px nos rótulos, 16 px nas instruções.
+- CSS embutido no próprio `index.html` (sem arquivo externo).
+
+---
+
+## Restrições técnicas
+
+- Usar apenas `vendor/exceljs.min.js` (já presente) — sem CDN, sem `import` de URLs externas.
+- Carregar ExcelJS via `<script src="vendor/exceljs.min.js">` antes do script da aplicação.
+- Sem build: `index.html` deve abrir diretamente no browser (Chrome/Edge).
+- Não usar dados reais: o modelo de teste é `assets/modelo/modelo-exemplo-ficticio.xlsx`.
 
 ---
 
 ## Critério de conclusão
 
-- `npm test` passa (todos os testes verde).
-- `src/layout.js` exporta as três funções nomeadas.
-- Nenhuma biblioteca externa adicionada (só as já listadas na seção 9 do SPEC).
+- Abrir `index.html` no browser mostra a interface com área de drop e indicador de etapas.
+- Arrastar `assets/modelo/modelo-exemplo-ficticio.xlsx` exibe "Modelo carregado com sucesso."
+- Arrastar um `.xlsx` sem a aba exibe a mensagem de erro correspondente.
+- Arrastar um arquivo que não é `.xlsx` exibe erro "Arquivo inválido: use um arquivo .xlsx."
 - `STATUS.md` atualizado com o resultado.

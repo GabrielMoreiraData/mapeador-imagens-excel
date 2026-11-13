@@ -4,8 +4,669 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Relatório de ensaio</title>
+  <style>
+    :root {
+      --azul-900: #071426;
+      --azul-800: #0a1c31;
+      --azul-700: #102a47;
+      --azul-600: #123a63;
+      --azul-caixa: #0c2138;
+      --borda: #254a75;
+      --texto: #eaf1fa;
+      --texto-suave: #b6c9de;
+      --laranja: #f97316;
+      --laranja-escuro: #c2410c;
+      --verde: #34d399;
+      --vermelho: #fca5a5;
+      --raio: 14px;
+      color-scheme: dark;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(1100px 520px at 12% -12%, #12365b 0%, transparent 62%),
+        var(--azul-900);
+      color: var(--texto);
+      font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    /* Faixa laranja do topo */
+    .faixa {
+      background: var(--laranja);
+      color: #06152a;
+      border-bottom: 4px solid var(--laranja-escuro);
+    }
+
+    .faixa__conteudo {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 14px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 4px 18px;
+    }
+
+    .faixa h1 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: 0.2px;
+    }
+
+    .faixa__subtitulo {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: #10233d;
+    }
+
+    main {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 24px 24px 48px;
+    }
+
+    /* Indicador de etapas: 1 Modelo → 2 Fotos → 3 Gerar */
+    .etapas {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 24px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .etapa {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 16px;
+      border: 1px solid var(--borda);
+      border-radius: 999px;
+      background: var(--azul-700);
+      color: var(--texto-suave);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .etapa__numero {
+      display: grid;
+      place-items: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--texto);
+    }
+
+    .etapa--atual {
+      background: var(--azul-600);
+      border-color: var(--laranja);
+      color: #ffffff;
+      box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.28);
+    }
+
+    .etapa--atual .etapa__numero {
+      background: var(--laranja);
+      color: #06152a;
+    }
+
+    .etapa--concluida {
+      background: #10332b;
+      border-color: #2f7d63;
+      color: #d1fae5;
+    }
+
+    .etapa--concluida .etapa__numero {
+      background: var(--verde);
+      color: #062a1c;
+    }
+
+    .etapa__seta {
+      color: #6d87a6;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    /* Duas colunas: cartão do arquivo à esquerda, área de arrastar à direita */
+    .colunas {
+      display: grid;
+      grid-template-columns: minmax(260px, 330px) 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .cartao {
+      padding: 20px;
+      border: 1px solid var(--borda);
+      border-radius: var(--raio);
+      background: var(--azul-700);
+    }
+
+    .cartao h2,
+    .area h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+      letter-spacing: 0.2px;
+    }
+
+    .selo {
+      display: inline-block;
+      margin: 0 0 16px;
+      padding: 3px 10px;
+      border: 1px solid var(--borda);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--texto-suave);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .selo--ok {
+      border-color: #2f7d63;
+      background: #10332b;
+      color: #d1fae5;
+    }
+
+    .detalhes {
+      margin: 0;
+      display: grid;
+      gap: 12px;
+    }
+
+    .detalhes div {
+      display: grid;
+      gap: 2px;
+    }
+
+    .detalhes dt {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--texto-suave);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .detalhes dd {
+      margin: 0;
+      font-size: 16px;
+      overflow-wrap: anywhere;
+    }
+
+    .area {
+      padding: 20px;
+      border: 1px solid var(--borda);
+      border-radius: var(--raio);
+      background: var(--azul-700);
+    }
+
+    /* Área de drop */
+    .drop {
+      display: grid;
+      place-content: center;
+      justify-items: center;
+      gap: 10px;
+      min-height: 260px;
+      padding: 28px 20px;
+      border: 2px dashed var(--borda);
+      border-radius: var(--raio);
+      background: var(--azul-caixa);
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 140ms ease, background-color 140ms ease;
+    }
+
+    .drop:hover,
+    .drop--ativo {
+      border-color: var(--laranja);
+      background: #123554;
+    }
+
+    .drop:focus-within {
+      outline: 3px solid var(--laranja);
+      outline-offset: 3px;
+    }
+
+    .drop--carregando {
+      cursor: progress;
+      opacity: 0.85;
+    }
+
+    .drop__icone {
+      width: 54px;
+      height: 54px;
+      color: var(--laranja);
+    }
+
+    .drop__instrucao {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--texto);
+    }
+
+    .drop__dica {
+      margin: 0;
+      font-size: 16px;
+      color: var(--texto-suave);
+    }
+
+    .drop__acao {
+      margin-top: 6px;
+      padding: 10px 18px;
+      border: 1px solid var(--laranja);
+      border-radius: 10px;
+      background: rgba(249, 115, 22, 0.14);
+      color: #ffd9bd;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .drop:hover .drop__acao,
+    .drop--ativo .drop__acao {
+      background: rgba(249, 115, 22, 0.24);
+    }
+
+    /* Mantém o input acessível por teclado, sem aparecer na tela */
+    .oculto-visual {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      clip-path: inset(50%);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* Mensagens (erro, carregando, sucesso) */
+    .mensagem {
+      margin: 16px 0 0;
+      padding: 12px 14px;
+      border: 1px solid var(--borda);
+      border-radius: 10px;
+      background: #132c4a;
+      color: var(--texto);
+      font-size: 16px;
+    }
+
+    .mensagem[hidden] {
+      display: none;
+    }
+
+    .mensagem--ok {
+      border-color: #2f7d63;
+      background: #0f3327;
+      color: #c9f7e3;
+    }
+
+    .mensagem--erro {
+      border-color: #8a3548;
+      background: #3a1620;
+      color: var(--vermelho);
+    }
+
+    .mensagem__detalhe {
+      display: block;
+      margin-top: 4px;
+      font-size: 14px;
+      color: inherit;
+      opacity: 0.9;
+    }
+
+    @media (max-width: 860px) {
+      .colunas {
+        grid-template-columns: 1fr;
+      }
+
+      main {
+        padding: 20px 16px 40px;
+      }
+
+      .faixa__conteudo {
+        padding: 12px 16px;
+      }
+    }
+  </style>
 </head>
 <body>
-  <!-- app aqui -->
+  <header class="faixa">
+    <div class="faixa__conteudo">
+      <h1>Relatório de ensaio</h1>
+      <p class="faixa__subtitulo">Inserção de fotos no modelo</p>
+    </div>
+  </header>
+
+  <main>
+    <ol class="etapas" aria-label="Etapas do relatório">
+      <li class="etapa etapa--atual" data-etapa="1" aria-current="step">
+        <span class="etapa__numero">1</span>
+        <span class="etapa__rotulo">Modelo</span>
+      </li>
+      <li class="etapa__seta" aria-hidden="true">→</li>
+      <li class="etapa" data-etapa="2" aria-disabled="true">
+        <span class="etapa__numero">2</span>
+        <span class="etapa__rotulo">Fotos</span>
+      </li>
+      <li class="etapa__seta" aria-hidden="true">→</li>
+      <li class="etapa" data-etapa="3" aria-disabled="true">
+        <span class="etapa__numero">3</span>
+        <span class="etapa__rotulo">Gerar</span>
+      </li>
+    </ol>
+
+    <div class="colunas">
+      <section class="cartao" aria-labelledby="titulo-arquivo">
+        <h2 id="titulo-arquivo">Arquivo do modelo</h2>
+        <p id="cartao-estado" class="selo">Aguardando modelo</p>
+        <dl class="detalhes">
+          <div>
+            <dt>Arquivo</dt>
+            <dd id="nome-arquivo">Nenhum modelo carregado</dd>
+          </div>
+          <div>
+            <dt>Aba usada</dt>
+            <dd id="nome-aba">—</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="area" aria-labelledby="titulo-modelo">
+        <h2 id="titulo-modelo">Modelo .xlsx</h2>
+
+        <label id="area-drop" class="drop" for="entrada-arquivo">
+          <svg class="drop__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path>
+            <path d="M14 3v5h5"></path>
+            <path d="M12 18v-6"></path>
+            <path d="M9.5 14.5 12 12l2.5 2.5"></path>
+          </svg>
+          <span id="instrucao-drop" class="drop__instrucao">
+            Arraste o modelo .xlsx aqui ou clique para escolher
+          </span>
+          <span class="drop__dica">
+            Somente .xlsx · precisa conter a aba “Relatório de ensaio”
+          </span>
+          <span class="drop__acao" aria-hidden="true">Escolher arquivo</span>
+          <input id="entrada-arquivo" class="oculto-visual" type="file" accept=".xlsx">
+        </label>
+
+        <p id="mensagem" class="mensagem" role="status" aria-live="polite" hidden></p>
+
+        <noscript>
+          <p class="mensagem mensagem--erro">
+            Ative o JavaScript para carregar o modelo e gerar o relatório.
+          </p>
+        </noscript>
+      </section>
+    </div>
+  </main>
+
+  <script src="vendor/exceljs.min.js"></script>
+  <script>
+    (() => {
+      "use strict";
+
+      const ABA_OBRIGATORIA = "Relatório de ensaio";
+      const EXTENSAO = ".xlsx";
+
+      const areaDrop = document.getElementById("area-drop");
+      const entradaArquivo = document.getElementById("entrada-arquivo");
+      const mensagem = document.getElementById("mensagem");
+      const nomeArquivo = document.getElementById("nome-arquivo");
+      const nomeAba = document.getElementById("nome-aba");
+      const cartaoEstado = document.getElementById("cartao-estado");
+      const etapas = Array.from(document.querySelectorAll(".etapa"));
+
+      // Só leitura nesta fase (RF11). O ArrayBuffer fica guardado para as
+      // próximas etapas (fotos e geração), sem tocar no arquivo de origem.
+      const estado = {
+        modelo: null,
+        carregando: false,
+      };
+
+      /** Deixa a próxima pintura acontecer antes de uma tarefa pesada. */
+      function aguardarPintura() {
+        return new Promise((resolver) => requestAnimationFrame(() => resolver()));
+      }
+
+      /**
+       * Atualiza o indicador de etapas.
+       * Etapas anteriores ficam concluídas, a indicada fica atual e as
+       * seguintes ficam bloqueadas.
+       */
+      function definirEtapa(numeroAtual) {
+        etapas.forEach((etapa) => {
+          const numero = Number(etapa.dataset.etapa);
+          const concluida = numero < numeroAtual;
+          const atual = numero === numeroAtual;
+
+          etapa.classList.toggle("etapa--concluida", concluida);
+          etapa.classList.toggle("etapa--atual", atual);
+          etapa.querySelector(".etapa__numero").textContent = concluida ? "✓" : String(numero);
+          etapa.setAttribute("aria-disabled", String(numero > numeroAtual));
+
+          if (atual) {
+            etapa.setAttribute("aria-current", "step");
+          } else {
+            etapa.removeAttribute("aria-current");
+          }
+        });
+      }
+
+      /** Mostra uma mensagem em texto claro na tela. */
+      function mostrarMensagem(tipo, texto, detalhe) {
+        mensagem.className = `mensagem mensagem--${tipo}`;
+        mensagem.setAttribute("role", tipo === "erro" ? "alert" : "status");
+        mensagem.replaceChildren();
+
+        mensagem.append(document.createTextNode(texto));
+
+        if (detalhe) {
+          const linha = document.createElement("span");
+          linha.className = "mensagem__detalhe";
+          linha.textContent = detalhe;
+          mensagem.append(linha);
+        }
+
+        mensagem.hidden = false;
+      }
+
+      function limparMensagem() {
+        mensagem.hidden = true;
+        mensagem.replaceChildren();
+      }
+
+      function formatarTamanho(bytes) {
+        const unidades = ["B", "KB", "MB", "GB"];
+        let valor = bytes;
+        let indice = 0;
+
+        while (valor >= 1024 && indice < unidades.length - 1) {
+          valor /= 1024;
+          indice += 1;
+        }
+
+        const numero = valor.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
+        return `${numero} ${unidades[indice]}`;
+      }
+
+      /** Reflete o estado do modelo no cartão da esquerda. */
+      function atualizarCartao() {
+        if (estado.modelo) {
+          cartaoEstado.textContent = "Modelo validado";
+          cartaoEstado.className = "selo selo--ok";
+          nomeArquivo.textContent = `${estado.modelo.nome} (${formatarTamanho(estado.modelo.tamanho)})`;
+          nomeAba.textContent = ABA_OBRIGATORIA;
+          return;
+        }
+
+        cartaoEstado.textContent = "Aguardando modelo";
+        cartaoEstado.className = "selo";
+        nomeArquivo.textContent = "Nenhum modelo carregado";
+        nomeAba.textContent = "—";
+      }
+
+      /** Descarta o modelo atual e volta para a etapa 1. */
+      function redefinirModelo() {
+        estado.modelo = null;
+        atualizarCartao();
+        definirEtapa(1);
+      }
+
+      /**
+       * Lê o .xlsx e valida a aba "Relatório de ensaio" (RF01 e RF02).
+       * O arquivo é apenas lido; nada é gravado.
+       */
+      async function carregarModelo(arquivo) {
+        if (estado.carregando || !arquivo) {
+          return;
+        }
+
+        // Permite escolher o mesmo arquivo de novo depois de um erro.
+        entradaArquivo.value = "";
+
+        const nome = arquivo.name || "";
+
+        if (!nome.toLowerCase().endsWith(EXTENSAO)) {
+          redefinirModelo();
+          mostrarMensagem("erro", "Arquivo inválido: use um arquivo .xlsx.");
+          return;
+        }
+
+        if (typeof ExcelJS === "undefined" || typeof ExcelJS.Workbook !== "function") {
+          mostrarMensagem(
+            "erro",
+            "Não foi possível carregar a biblioteca de planilhas.",
+            "Confirme se a pasta vendor/ acompanha o index.html."
+          );
+          return;
+        }
+
+        estado.carregando = true;
+        areaDrop.classList.add("drop--carregando");
+        areaDrop.setAttribute("aria-busy", "true");
+        mostrarMensagem("carregando", `Lendo “${nome}”…`);
+        await aguardarPintura();
+
+        try {
+          const buffer = await arquivo.arrayBuffer();
+          const workbook = new ExcelJS.Workbook();
+          await workbook.xlsx.load(buffer);
+
+          const abas = workbook.worksheets.map((aba) => aba.name);
+
+          if (!abas.includes(ABA_OBRIGATORIA)) {
+            redefinirModelo();
+            mostrarMensagem(
+              "erro",
+              `Arquivo inválido: aba '${ABA_OBRIGATORIA}' não encontrada.`,
+              `Abas encontradas: ${abas.length ? abas.join(", ") : "nenhuma"}.`
+            );
+            return;
+          }
+
+          estado.modelo = {
+            nome,
+            tamanho: arquivo.size,
+            buffer,
+            abas,
+          };
+
+          atualizarCartao();
+          definirEtapa(2);
+          mostrarMensagem(
+            "ok",
+            "Modelo carregado com sucesso.",
+            "Próxima etapa liberada: Fotos (de 1 a 8)."
+          );
+        } catch (erro) {
+          console.error(erro);
+          redefinirModelo();
+          mostrarMensagem(
+            "erro",
+            "Arquivo inválido: não foi possível ler o .xlsx.",
+            "Verifique se o arquivo está íntegro e não está protegido por senha."
+          );
+        } finally {
+          estado.carregando = false;
+          areaDrop.classList.remove("drop--carregando");
+          areaDrop.removeAttribute("aria-busy");
+          entradaArquivo.value = "";
+        }
+      }
+
+      entradaArquivo.addEventListener("change", () => {
+        carregarModelo(entradaArquivo.files && entradaArquivo.files[0]);
+      });
+
+      ["dragenter", "dragover"].forEach((tipo) => {
+        areaDrop.addEventListener(tipo, (evento) => {
+          evento.preventDefault();
+          evento.stopPropagation();
+          if (!estado.carregando) {
+            areaDrop.classList.add("drop--ativo");
+          }
+        });
+      });
+
+      areaDrop.addEventListener("dragleave", (evento) => {
+        evento.preventDefault();
+        if (!areaDrop.contains(evento.relatedTarget)) {
+          areaDrop.classList.remove("drop--ativo");
+        }
+      });
+
+      areaDrop.addEventListener("drop", (evento) => {
+        evento.preventDefault();
+        evento.stopPropagation();
+        areaDrop.classList.remove("drop--ativo");
+
+        if (estado.carregando) {
+          return;
+        }
+
+        const arquivos = evento.dataTransfer ? Array.from(evento.dataTransfer.files) : [];
+
+        if (!arquivos.length) {
+          mostrarMensagem("erro", "Nenhum arquivo recebido. Arraste um arquivo .xlsx.");
+          return;
+        }
+
+        carregarModelo(arquivos[0]);
+      });
+
+      // Evita que o navegador abra o arquivo quando ele é solto fora da área.
+      ["dragover", "drop"].forEach((tipo) => {
+        window.addEventListener(tipo, (evento) => {
+          if (!areaDrop.contains(evento.target)) {
+            evento.preventDefault();
+          }
+        });
+      });
+
+      limparMensagem();
+      definirEtapa(1);
+      atualizarCartao();
+    })();
+  </script>
 </body>
 </html>
