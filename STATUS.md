@@ -1,5 +1,58 @@
 # Status
 
+## Fase E2 — concluída (2026-11-13)
+
+**Construtor:** OpenCode
+
+### Entregue em `index.html`
+
+**RF03 — fotos de 1 a 8 (JPG, PNG, WEBP)**
+- Seção "Fotos" com área de drop e `<input type="file" multiple accept="image/jpeg,image/png,image/webp">`; aceita lote por arrastar e soltar ou por seleção.
+- Bloqueada até o modelo ser validado: área em meia opacidade, input desabilitado e aviso "Carregue o modelo .xlsx para liberar o envio de fotos.".
+- Formatos fora da lista são recusados com a mensagem exata "Formato não aceito: use JPG, PNG ou WEBP." e o lote inteiro é descartado.
+
+**RF04 — limite de 8**
+- Lote atômico: se o total (já carregadas + seleção) passar de 8, nada é adicionado.
+- Erro bloqueante em barra vermelha: "Máximo de 8 fotos. Envie até 8 imagens." + detalhe com quantas já existem, quantas restam e o tamanho da seleção.
+- Regra mantida com 8 fotos: qualquer novo envio é bloqueado.
+
+**RF05 — posições e contador**
+- 1ª foto = Capa; demais = Registro 1 a 7, preenchidos na ordem de envio.
+- Contador visível "X de 8 fotos" (`role="status"`, `aria-live="polite"`); fica laranja em "8 de 8 fotos".
+- Grade com duas áreas: Capa (cartão maior, `aspect-ratio` 6,8/6,5) e Registros 1 a 7 (grade responsiva, `aspect-ratio` 9,6/7,2), com miniatura e nome do arquivo.
+- Posições vazias aparecem como caixa tracejada com o nome da posição e "Sem foto" (RF09).
+
+### Decisão técnica registrada
+
+- A lógica de `validarFotos` (limite 8 e tipos aceitos) foi replicada no script embutido, com os mesmos nomes de mensagem de `src/layout.js`. Motivo: a página abre por `file://` (sem build e sem servidor) e o Chrome bloqueia `import` de módulo ES nesse protocolo. O `TASKS.md` da fase permite "a mesma lógica já validada".
+
+### Verificação
+
+- `npm test`: **11 testes aprovados** (E0 preservada; nenhum arquivo de `src/` ou `tests/` alterado).
+- `node --check` no script embutido: sintaxe válida.
+- Chrome headless, `file:///.../index.html` (sem flags extras), fluxo completo:
+
+| Cenário | Resultado |
+|---|---|
+| Estado inicial | contador "0 de 8 fotos", 8 posições vazias rotuladas, área bloqueada, mensagem oculta |
+| Foto sem modelo | bloqueado com "Carregue o modelo .xlsx antes de adicionar fotos."; nada é adicionado |
+| Modelo válido | área liberada (input habilitado), aviso e mensagens antigas limpos |
+| 2 fotos | "2 de 8 fotos"; Capa e Registro 1 preenchidos com miniatura |
+| 1 PDF | "Formato não aceito: use JPG, PNG ou WEBP."; contador segue 2 |
+| +3 fotos (total 5) | "5 de 8 fotos"; ordem Capa, Registro 1 a 4 |
+| +4 fotos (total 9) | bloqueado: "Máximo de 8 fotos… restam 3 posição(ões)…"; contador segue 5 |
+| +2 fotos (total 7) | "7 de 8 fotos"; sem exceções no console |
+| +1 foto com 8 | bloqueado; contador segue "8 de 8 fotos" |
+
+- Captura de tela da página inteira conferida: tema escuro, faixa laranja, indicador de etapas, contador, miniaturas e posição vazia tracejada.
+
+### Pendente para o Revisor
+
+- Revalidar E2.
+- Reordenar com setas, aviso de foto menor que a área e remoção de fotos ficam para as fases seguintes (E3/E7), conforme a seção 13 do SPEC.
+
+---
+
 ## Fase E1 — concluída (2026-11-13, revisão 2)
 
 **Construtor:** OpenCode
@@ -46,9 +99,3 @@
   - drop de `.xlsx` corrompido → "Arquivo inválido: não foi possível ler o .xlsx.".
 - Capturas de tela conferidas: tema, faixa laranja, indicador de etapas e mensagens legíveis.
 - `node --check` no script embutido: sintaxe válida.
-
-### Pendente para o Revisor
-
-- Revalidar E1.
-- A etapa 2 (fotos) ainda não tem interface: está apenas liberada no indicador, como previsto para esta fase.
-- P1 do SPEC (conversão de grade no Excel real) segue para E7.

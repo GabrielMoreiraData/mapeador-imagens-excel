@@ -331,9 +331,168 @@
       opacity: 0.9;
     }
 
+    /* Etapa 2 — fotos */
+    .fotos {
+      margin-top: 20px;
+      padding: 20px;
+      border: 1px solid var(--borda);
+      border-radius: var(--raio);
+      background: var(--azul-700);
+    }
+
+    .fotos__topo {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .fotos__topo h2 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: 0.2px;
+    }
+
+    .contador {
+      margin: 0;
+      padding: 6px 14px;
+      border: 1px solid var(--borda);
+      border-radius: 999px;
+      background: var(--azul-caixa);
+      color: var(--texto);
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .contador--cheio {
+      border-color: var(--laranja);
+      color: #ffd9bd;
+    }
+
+    .aviso {
+      margin: 0 0 14px;
+      font-size: 16px;
+      color: var(--texto-suave);
+    }
+
+    .aviso[hidden] {
+      display: none;
+    }
+
+    .drop--compacto {
+      min-height: 170px;
+      padding: 20px;
+    }
+
+    .drop--compacto .drop__icone {
+      width: 40px;
+      height: 44px;
+    }
+
+    .drop--bloqueado {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .drop--bloqueado:hover {
+      border-color: var(--borda);
+      background: var(--azul-caixa);
+    }
+
+    .subtitulo {
+      margin: 18px 0 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--texto-suave);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .grade {
+      display: grid;
+      gap: 14px;
+      margin: 10px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .grade--capa {
+      grid-template-columns: minmax(200px, 280px);
+    }
+
+    .grade--registros {
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+
+    /* Vaga de foto: vazia (tracejada) ou preenchida (miniatura) */
+    .vaga {
+      display: grid;
+      gap: 6px;
+      padding: 10px;
+      border: 1px dashed var(--borda);
+      border-radius: 12px;
+      background: var(--azul-caixa);
+      color: var(--texto-suave);
+      font-size: 14px;
+    }
+
+    .vaga--vazia {
+      place-content: center;
+      min-height: 120px;
+      text-align: center;
+    }
+
+    .vaga--preenchida {
+      border-style: solid;
+      border-color: #2f7d63;
+      color: var(--texto);
+    }
+
+    .vaga__imagem {
+      display: block;
+      width: 100%;
+      border-radius: 8px;
+      background: #05101f;
+      object-fit: contain;
+    }
+
+    .vaga--capa .vaga__imagem {
+      aspect-ratio: 6.8 / 6.5;
+    }
+
+    .vaga--registro .vaga__imagem {
+      aspect-ratio: 9.6 / 7.2;
+    }
+
+    .vaga__rotulo {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--texto);
+    }
+
+    .vaga--vazia .vaga__rotulo {
+      color: var(--texto-suave);
+    }
+
+    .vaga__arquivo,
+    .vaga__dica {
+      font-size: 14px;
+      overflow-wrap: anywhere;
+    }
+
+    .vaga__arquivo {
+      color: var(--texto-suave);
+    }
+
     @media (max-width: 860px) {
       .colunas {
         grid-template-columns: 1fr;
+      }
+
+      .fotos {
+        padding: 16px;
       }
 
       main {
@@ -418,6 +577,39 @@
         </noscript>
       </section>
     </div>
+
+    <section id="secao-fotos" class="fotos" aria-labelledby="titulo-fotos">
+      <div class="fotos__topo">
+        <h2 id="titulo-fotos">Fotos</h2>
+        <p id="contador-fotos" class="contador" role="status" aria-live="polite">0 de 8 fotos</p>
+      </div>
+
+      <p id="aviso-fotos" class="aviso">
+        Carregue o modelo .xlsx para liberar o envio de fotos.
+      </p>
+
+      <label id="area-fotos" class="drop drop--compacto drop--bloqueado" for="entrada-fotos">
+        <svg class="drop__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+          <circle cx="8.5" cy="9.5" r="1.5"></circle>
+          <path d="m21 16-5-5-9 9"></path>
+        </svg>
+        <span class="drop__instrucao">Arraste as fotos aqui ou clique para escolher</span>
+        <span class="drop__dica">JPG, PNG ou WEBP · a 1ª foto vira a Capa</span>
+        <span class="drop__acao" aria-hidden="true">Escolher fotos</span>
+        <input id="entrada-fotos" class="oculto-visual" type="file" multiple
+               accept="image/jpeg,image/png,image/webp" disabled>
+      </label>
+
+      <p id="mensagem-fotos" class="mensagem" role="status" aria-live="polite" hidden></p>
+
+      <h3 class="subtitulo">Capa</h3>
+      <ul id="grade-capa" class="grade grade--capa" aria-label="Posição da capa"></ul>
+
+      <h3 class="subtitulo">Registros</h3>
+      <ul id="grade-registros" class="grade grade--registros" aria-label="Posições dos registros 1 a 7"></ul>
+    </section>
   </main>
 
   <script src="vendor/exceljs.min.js"></script>
@@ -428,6 +620,31 @@
       const ABA_OBRIGATORIA = "Relatório de ensaio";
       const EXTENSAO = ".xlsx";
 
+      // Mesmas regras da função pura validarFotos() de src/layout.js.
+      // A página abre direto do disco (file://), então não há módulo ES
+      // importável; a lógica abaixo é a cópia validada em tests/.
+      const LIMITE_FOTOS = 8;
+      const TIPOS_ACEITOS = new Set(["image/jpeg", "image/png", "image/webp"]);
+      const TIPO_POR_EXTENSAO = {
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+        ".webp": "image/webp",
+      };
+      const POSICOES = [
+        "Capa",
+        "Registro 1",
+        "Registro 2",
+        "Registro 3",
+        "Registro 4",
+        "Registro 5",
+        "Registro 6",
+        "Registro 7",
+      ];
+      const ERRO_LIMITE = "Máximo de 8 fotos. Envie até 8 imagens.";
+      const ERRO_FORMATO = "Formato não aceito: use JPG, PNG ou WEBP.";
+      const ERRO_SEM_MODELO = "Carregue o modelo .xlsx antes de adicionar fotos.";
+
       const areaDrop = document.getElementById("area-drop");
       const entradaArquivo = document.getElementById("entrada-arquivo");
       const mensagem = document.getElementById("mensagem");
@@ -436,11 +653,21 @@
       const cartaoEstado = document.getElementById("cartao-estado");
       const etapas = Array.from(document.querySelectorAll(".etapa"));
 
+      const areaFotos = document.getElementById("area-fotos");
+      const entradaFotos = document.getElementById("entrada-fotos");
+      const mensagemFotos = document.getElementById("mensagem-fotos");
+      const contadorFotos = document.getElementById("contador-fotos");
+      const avisoFotos = document.getElementById("aviso-fotos");
+      const gradeCapa = document.getElementById("grade-capa");
+      const gradeRegistros = document.getElementById("grade-registros");
+
       // Só leitura nesta fase (RF11). O ArrayBuffer fica guardado para as
       // próximas etapas (fotos e geração), sem tocar no arquivo de origem.
       const estado = {
         modelo: null,
         carregando: false,
+        fotosHabilitadas: false,
+        fotos: [],
       };
 
       /** Deixa a próxima pintura acontecer antes de uma tarefa pesada. */
@@ -473,26 +700,26 @@
       }
 
       /** Mostra uma mensagem em texto claro na tela. */
-      function mostrarMensagem(tipo, texto, detalhe) {
-        mensagem.className = `mensagem mensagem--${tipo}`;
-        mensagem.setAttribute("role", tipo === "erro" ? "alert" : "status");
-        mensagem.replaceChildren();
+      function mostrarMensagemEm(elemento, tipo, texto, detalhe) {
+        elemento.className = `mensagem mensagem--${tipo}`;
+        elemento.setAttribute("role", tipo === "erro" ? "alert" : "status");
+        elemento.replaceChildren();
 
-        mensagem.append(document.createTextNode(texto));
+        elemento.append(document.createTextNode(texto));
 
         if (detalhe) {
           const linha = document.createElement("span");
           linha.className = "mensagem__detalhe";
           linha.textContent = detalhe;
-          mensagem.append(linha);
+          elemento.append(linha);
         }
 
-        mensagem.hidden = false;
+        elemento.hidden = false;
       }
 
-      function limparMensagem() {
-        mensagem.hidden = true;
-        mensagem.replaceChildren();
+      function limparMensagemEm(elemento) {
+        elemento.hidden = true;
+        elemento.replaceChildren();
       }
 
       function formatarTamanho(bytes) {
@@ -529,7 +756,148 @@
       function redefinirModelo() {
         estado.modelo = null;
         atualizarCartao();
+        habilitarFotos(false);
+        limparMensagemEm(mensagemFotos);
         definirEtapa(1);
+      }
+
+      /** Libera ou bloqueia o envio de fotos conforme o modelo (RF03). */
+      function habilitarFotos(habilitado) {
+        estado.fotosHabilitadas = habilitado;
+        areaFotos.classList.toggle("drop--bloqueado", !habilitado);
+        areaFotos.setAttribute("aria-disabled", String(!habilitado));
+        entradaFotos.disabled = !habilitado;
+        avisoFotos.hidden = habilitado;
+      }
+
+      /** Descobre o tipo aceito da imagem; vazio quando o formato não serve. */
+      function tipoDaImagem(arquivo) {
+        const tipo = (arquivo.type || "").toLowerCase();
+
+        if (tipo) {
+          return TIPOS_ACEITOS.has(tipo) ? tipo : "";
+        }
+
+        // Alguns navegadores não informam o MIME ao arrastar do sistema.
+        const nome = (arquivo.name || "").toLowerCase();
+        const ponto = nome.lastIndexOf(".");
+        return ponto < 0 ? "" : TIPO_POR_EXTENSAO[nome.slice(ponto)] || "";
+      }
+
+      /** Monta a vaga de uma posição: tracejada vazia ou com miniatura. */
+      function criarVaga(indice, foto) {
+        const item = document.createElement("li");
+        item.className = `vaga vaga--${indice === 0 ? "capa" : "registro"}`;
+
+        if (!foto) {
+          item.classList.add("vaga--vazia");
+
+          const rotulo = document.createElement("span");
+          rotulo.className = "vaga__rotulo";
+          rotulo.textContent = POSICOES[indice];
+
+          const dica = document.createElement("span");
+          dica.className = "vaga__dica";
+          dica.textContent = "Sem foto";
+
+          item.append(rotulo, dica);
+          return item;
+        }
+
+        item.classList.add("vaga--preenchida");
+
+        const imagem = document.createElement("img");
+        imagem.className = "vaga__imagem";
+        imagem.src = foto.url;
+        imagem.alt = `${POSICOES[indice]}: ${foto.nome}`;
+
+        const rotulo = document.createElement("span");
+        rotulo.className = "vaga__rotulo";
+        rotulo.textContent = POSICOES[indice];
+
+        const arquivo = document.createElement("span");
+        arquivo.className = "vaga__arquivo";
+        arquivo.textContent = foto.nome;
+
+        item.append(imagem, rotulo, arquivo);
+        return item;
+      }
+
+      /** Redesenha as 8 posições e o contador "X de 8 fotos". */
+      function renderizarFotos() {
+        const registros = [];
+
+        for (let indice = 1; indice < LIMITE_FOTOS; indice += 1) {
+          registros.push(criarVaga(indice, estado.fotos[indice]));
+        }
+
+        gradeCapa.replaceChildren(criarVaga(0, estado.fotos[0]));
+        gradeRegistros.replaceChildren(...registros);
+
+        const total = estado.fotos.length;
+        contadorFotos.textContent = `${total} de ${LIMITE_FOTOS} fotos`;
+        contadorFotos.classList.toggle("contador--cheio", total === LIMITE_FOTOS);
+      }
+
+      /**
+       * Adiciona um lote de fotos (RF03, RF04, RF05).
+       * O lote é atômico: se algum formato for inválido ou o total passar de
+       * 8, nada é adicionado e o erro bloqueante aparece na tela.
+       */
+      function adicionarFotos(arquivos) {
+        if (!estado.fotosHabilitadas) {
+          mostrarMensagemEm(mensagemFotos, "erro", ERRO_SEM_MODELO);
+          return;
+        }
+
+        if (!arquivos.length) {
+          mostrarMensagemEm(
+            mensagemFotos,
+            "erro",
+            "Nenhuma foto recebida. Arraste de 1 a 8 imagens."
+          );
+          return;
+        }
+
+        const total = estado.fotos.length + arquivos.length;
+
+        if (total > LIMITE_FOTOS) {
+          const restantes = LIMITE_FOTOS - estado.fotos.length;
+          mostrarMensagemEm(
+            mensagemFotos,
+            "erro",
+            ERRO_LIMITE,
+            `Você já tem ${estado.fotos.length} de 8 fotos, restam ${restantes} posição(ões) ` +
+              `e esta seleção tem ${arquivos.length}. Nenhuma foto foi adicionada.`
+          );
+          return;
+        }
+
+        const tipos = arquivos.map(tipoDaImagem);
+
+        if (tipos.some((tipo) => !tipo)) {
+          mostrarMensagemEm(mensagemFotos, "erro", ERRO_FORMATO, "Nenhuma foto foi adicionada.");
+          return;
+        }
+
+        arquivos.forEach((arquivo, indice) => {
+          estado.fotos.push({
+            nome: arquivo.name || POSICOES[estado.fotos.length],
+            tamanho: arquivo.size,
+            tipo: tipos[indice],
+            url: URL.createObjectURL(arquivo),
+          });
+        });
+
+        renderizarFotos();
+
+        const adicionadas = arquivos.length;
+        mostrarMensagemEm(
+          mensagemFotos,
+          "ok",
+          adicionadas === 1 ? "1 foto adicionada." : `${adicionadas} fotos adicionadas.`,
+          `Posições preenchidas em ordem: ${POSICOES.slice(0, estado.fotos.length).join(", ")}.`
+        );
       }
 
       /**
@@ -548,12 +916,12 @@
 
         if (!nome.toLowerCase().endsWith(EXTENSAO)) {
           redefinirModelo();
-          mostrarMensagem("erro", "Arquivo inválido: use um arquivo .xlsx.");
+          mostrarMensagemEm(mensagem, "erro", "Arquivo inválido: use um arquivo .xlsx.");
           return;
         }
 
         if (typeof ExcelJS === "undefined" || typeof ExcelJS.Workbook !== "function") {
-          mostrarMensagem(
+          mostrarMensagemEm(mensagem,
             "erro",
             "Não foi possível carregar a biblioteca de planilhas.",
             "Confirme se a pasta vendor/ acompanha o index.html."
@@ -564,7 +932,7 @@
         estado.carregando = true;
         areaDrop.classList.add("drop--carregando");
         areaDrop.setAttribute("aria-busy", "true");
-        mostrarMensagem("carregando", `Lendo “${nome}”…`);
+        mostrarMensagemEm(mensagem, "carregando", `Lendo “${nome}”…`);
         await aguardarPintura();
 
         try {
@@ -576,7 +944,7 @@
 
           if (!abas.includes(ABA_OBRIGATORIA)) {
             redefinirModelo();
-            mostrarMensagem(
+            mostrarMensagemEm(mensagem,
               "erro",
               `Arquivo inválido: aba '${ABA_OBRIGATORIA}' não encontrada.`,
               `Abas encontradas: ${abas.length ? abas.join(", ") : "nenhuma"}.`
@@ -592,8 +960,10 @@
           };
 
           atualizarCartao();
+          habilitarFotos(true);
+          limparMensagemEm(mensagemFotos);
           definirEtapa(2);
-          mostrarMensagem(
+          mostrarMensagemEm(mensagem,
             "ok",
             "Modelo carregado com sucesso.",
             "Próxima etapa liberada: Fotos (de 1 a 8)."
@@ -601,7 +971,7 @@
         } catch (erro) {
           console.error(erro);
           redefinirModelo();
-          mostrarMensagem(
+          mostrarMensagemEm(mensagem,
             "erro",
             "Arquivo inválido: não foi possível ler o .xlsx.",
             "Verifique se o arquivo está íntegro e não está protegido por senha."
@@ -647,7 +1017,7 @@
         const arquivos = evento.dataTransfer ? Array.from(evento.dataTransfer.files) : [];
 
         if (!arquivos.length) {
-          mostrarMensagem("erro", "Nenhum arquivo recebido. Arraste um arquivo .xlsx.");
+          mostrarMensagemEm(mensagem, "erro", "Nenhum arquivo recebido. Arraste um arquivo .xlsx.");
           return;
         }
 
@@ -655,17 +1025,60 @@
       });
 
       // Evita que o navegador abra o arquivo quando ele é solto fora da área.
+      // Fotos: seleção por input e arrastar e soltar (RF03)
+      entradaFotos.addEventListener("change", () => {
+        const arquivos = entradaFotos.files ? Array.from(entradaFotos.files) : [];
+        entradaFotos.value = "";
+        adicionarFotos(arquivos);
+      });
+
+      areaFotos.addEventListener("click", (evento) => {
+        if (!estado.fotosHabilitadas) {
+          evento.preventDefault();
+          mostrarMensagemEm(mensagemFotos, "erro", ERRO_SEM_MODELO);
+        }
+      });
+
+      ["dragenter", "dragover"].forEach((tipo) => {
+        areaFotos.addEventListener(tipo, (evento) => {
+          evento.preventDefault();
+          evento.stopPropagation();
+          if (estado.fotosHabilitadas) {
+            areaFotos.classList.add("drop--ativo");
+          }
+        });
+      });
+
+      areaFotos.addEventListener("dragleave", (evento) => {
+        evento.preventDefault();
+        if (!areaFotos.contains(evento.relatedTarget)) {
+          areaFotos.classList.remove("drop--ativo");
+        }
+      });
+
+      areaFotos.addEventListener("drop", (evento) => {
+        evento.preventDefault();
+        evento.stopPropagation();
+        areaFotos.classList.remove("drop--ativo");
+
+        const arquivos = evento.dataTransfer ? Array.from(evento.dataTransfer.files) : [];
+        adicionarFotos(arquivos);
+      });
+
       ["dragover", "drop"].forEach((tipo) => {
         window.addEventListener(tipo, (evento) => {
-          if (!areaDrop.contains(evento.target)) {
+          if (!areaDrop.contains(evento.target) && !areaFotos.contains(evento.target)) {
             evento.preventDefault();
           }
         });
       });
 
-      limparMensagem();
+      limparMensagemEm(mensagem);
+      limparMensagemEm(mensagemFotos);
+      habilitarFotos(false);
       definirEtapa(1);
       atualizarCartao();
+      renderizarFotos();
     })();
   </script>
 </body>

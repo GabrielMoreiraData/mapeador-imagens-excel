@@ -1,6 +1,6 @@
 # Tarefa atual
 
-## Fase: E1
+## Fase: E2
 
 **Executor:** OpenCode (Construtor)  
 **Revisor:** Codex  
@@ -10,7 +10,7 @@
 
 ## Objetivo
 
-Implementar em `index.html` a leitura do arquivo `.xlsx` e a validação da aba "Relatório de ensaio" (RF01 e RF02), usando ExcelJS já presente em `vendor/exceljs.min.js`.
+Implementar em `index.html` o carregamento de fotos (1 a 8 imagens) por arrastar e soltar e seleção por input, integrando com as validações de formato e limite (RF03, RF04, RF05).
 
 ---
 
@@ -19,51 +19,35 @@ Implementar em `index.html` a leitura do arquivo `.xlsx` e a validação da aba 
 - `index.html`
 
 **Não alterar:** `src/layout.js`, `tests/`, `vendor/`, `assets/`, `SPEC.md`, `AGENTS.md`, `PLAN.md`, `TASKS.md`.  
+*(Nota para o Revisor: alterações em `PLAN.md` e `TASKS.md` são de gestão do Maestro).*  
 Registrar conclusão em `STATUS.md`.
 
 ---
 
 ## O que implementar
 
-### RF01 — Arrastar ou clicar para carregar o `.xlsx`
+### RF03 — Aceitar de 1 a 8 imagens (JPG, PNG, WEBP)
+- Área de drop e seleção de arquivos para fotos (habilitada após validação do modelo na Etapa 2).
+- Aceitar múltiplos arquivos simultâneos via `<input type="file" multiple accept="image/jpeg,image/png,image/webp">` e drag-and-drop.
+- Formatos não suportados devem ser rejeitados com mensagem clara: "Formato não aceito: use JPG, PNG ou WEBP.".
+- Pode reaproveitar ou integrar a função pura `validarFotos` de `src/layout.js` (ou a mesma lógica já validada).
 
-- Área de drop visível na tela com texto instrucional (ex.: "Arraste o modelo .xlsx aqui ou clique para escolher").
-- Aceitar arquivo via drag-and-drop e via `<input type="file" accept=".xlsx">`.
-- Ao carregar, exibir o nome do arquivo na interface.
+### RF04 — Limite de fotos
+- Com mais de 8 fotos: exibir erro bloqueante claro na interface. Nenhuma foto deve ser carregada se a lista exceder 8 fotos no envio inicial.
+- Se já houver fotos e o usuário adicionar mais excedendo 8: bloquear e manter a regra rígida de no máximo 8 fotos.
 
-### RF02 — Validar a aba "Relatório de ensaio"
-
-- Usar `ExcelJS.Workbook` (carregado de `vendor/exceljs.min.js`) para ler o arquivo recebido como `ArrayBuffer`.
-- Verificar se existe uma aba com o nome exato **"Relatório de ensaio"** (acento e maiúscula incluídos).
-- Se existir: exibir mensagem de sucesso (ex.: "Modelo carregado com sucesso.") e habilitar a próxima etapa.
-- Se não existir: exibir erro claro na tela (ex.: "Arquivo inválido: aba 'Relatório de ensaio' não encontrada."). Nenhuma ação adicional.
-- O arquivo original nunca é alterado (RF11): apenas leitura nesta fase.
-
----
-
-## Requisitos de interface (seção 15 do SPEC)
-
-- Tema escuro azul-marinho, faixa laranja no topo.
-- Indicador de etapas visível: **1 Modelo → 2 Fotos → 3 Gerar** (etapa 1 ativa).
-- Erros exibidos em texto claro na tela (não apenas `alert()`).
-- Mínimo 14 px nos rótulos, 16 px nas instruções.
-- CSS embutido no próprio `index.html` (sem arquivo externo).
-
----
-
-## Restrições técnicas
-
-- Usar apenas `vendor/exceljs.min.js` (já presente) — sem CDN, sem `import` de URLs externas.
-- Carregar ExcelJS via `<script src="vendor/exceljs.min.js">` antes do script da aplicação.
-- Sem build: `index.html` deve abrir diretamente no browser (Chrome/Edge).
-- Não usar dados reais: o modelo de teste é `assets/modelo/modelo-exemplo-ficticio.xlsx`.
+### RF05 — Atribuição inicial de posições
+- 1ª posição = Capa.
+- Posições seguintes = Registros 1 a 7.
+- Exibir contador visível: "X de 8 fotos" (seção 15 do SPEC).
+- Exibir lista/grade com as miniaturas carregadas ou identificação da posição (Capa, Registro 1, etc.).
 
 ---
 
 ## Critério de conclusão
 
-- Abrir `index.html` no browser mostra a interface com área de drop e indicador de etapas.
-- Arrastar `assets/modelo/modelo-exemplo-ficticio.xlsx` exibe "Modelo carregado com sucesso."
-- Arrastar um `.xlsx` sem a aba exibe a mensagem de erro correspondente.
-- Arrastar um arquivo que não é `.xlsx` exibe erro "Arquivo inválido: use um arquivo .xlsx."
-- `STATUS.md` atualizado com o resultado.
+- Com modelo validado, interface permite carregar de 1 a 8 fotos.
+- Tentativa de carregar arquivo não-imagem ou formato inválido acusa erro claro.
+- Tentativa de carregar 9 ou mais fotos bloqueia a operação e emite erro bloqueante.
+- Contador "X de 8 fotos" reflete a quantidade correta.
+- `STATUS.md` atualizado com as entregas e verificações.
