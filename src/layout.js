@@ -66,3 +66,38 @@ export function calcularPosicao(area, tamanhoFotoCm) {
     yCm: arredondar(area.yCm + (area.alturaCm - tamanhoFotoCm.altura) / 2),
   };
 }
+
+/**
+ * Converte centímetros em pixels na resolução informada (RF07).
+ * 1 polegada = 2,54 cm, então 300 dpi = 300 / 2,54 px por cm (≈ 118,11).
+ * @param {number} cm
+ * @param {number} [dpi=300]
+ * @returns {number} pixels arredondados
+ */
+export function cmParaPixels(cm, dpi = 300) {
+  return Math.round((cm / 2.54) * dpi);
+}
+
+/**
+ * Tamanho do canvas (em pixels) para uma foto impressa no tamanho final em cm.
+ * Capa 6,8 × 6,5 cm → 803 × 768 px; registros 9,6 × 7,2 cm → 1134 × 850 px.
+ * @param {{ largura: number, altura: number }} tamanhoCm
+ * @param {number} [dpi=300]
+ * @returns {{ largura: number, altura: number }}
+ */
+export function tamanhoEmPixels(tamanhoCm, dpi = 300) {
+  return {
+    largura: cmParaPixels(tamanhoCm.largura, dpi),
+    altura: cmParaPixels(tamanhoCm.altura, dpi),
+  };
+}
+
+/**
+ * Escala do ajuste "contain" em pixels (RF08).
+ * Sem o limite de 1 de `ajustarSemCorte`: aqui a imagem pode ser ampliada
+ * para alcançar a resolução final de 300 dpi.
+ */
+export function escalaContida(larguraOrig, alturaOrig, larguraAlvo, alturaAlvo) {
+  return Math.min(larguraAlvo / larguraOrig, alturaAlvo / alturaOrig);
+}
+

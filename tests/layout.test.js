@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { ajustarSemCorte, calcularPosicao, validarFotos } from "../src/layout.js";
+import {
+  ajustarSemCorte,
+  calcularPosicao,
+  cmParaPixels,
+  escalaContida,
+  tamanhoEmPixels,
+  validarFotos,
+} from "../src/layout.js";
 
 /** Monta uma lista de fotos fictícias com o tipo informado. */
 function fotos(quantidade, tipo = "image/jpeg") {
@@ -96,5 +103,37 @@ describe("calcularPosicao", () => {
 
     expect(xCm - area.xCm).toBeCloseTo(area.xCm + area.larguraCm - (xCm + foto.largura), 6);
     expect(yCm - area.yCm).toBeCloseTo(area.yCm + area.alturaCm - (yCm + foto.altura), 6);
+  });
+});
+
+describe("cmParaPixels", () => {
+  it("converte uma polegada em 300 px a 300 dpi", () => {
+    expect(cmParaPixels(2.54)).toBe(300);
+  });
+
+  it("usa 300 dpi por padrão e aceita outra resolução", () => {
+    expect(cmParaPixels(1)).toBe(118);
+    expect(cmParaPixels(2.54, 150)).toBe(150);
+  });
+});
+
+describe("tamanhoEmPixels", () => {
+  it("gera o canvas da capa em 803 × 768 px (6,8 × 6,5 cm a 300 dpi)", () => {
+    expect(tamanhoEmPixels({ largura: 6.8, altura: 6.5 })).toEqual({ largura: 803, altura: 768 });
+  });
+
+  it("gera o canvas dos registros em 1134 × 850 px (9,6 × 7,2 cm a 300 dpi)", () => {
+    expect(tamanhoEmPixels({ largura: 9.6, altura: 7.2 })).toEqual({ largura: 1134, altura: 850 });
+  });
+});
+
+describe("escalaContida", () => {
+  it("limita pelo eixo mais restritivo, mantendo a proporção", () => {
+    expect(escalaContida(1600, 1200, 803, 768)).toBeCloseTo(0.501875, 6);
+    expect(escalaContida(1200, 1600, 1134, 850)).toBeCloseTo(0.53125, 6);
+  });
+
+  it("amplia imagens menores para alcançar a resolução final (300 dpi)", () => {
+    expect(escalaContida(100, 50, 803, 768)).toBeCloseTo(8.03, 6);
   });
 });

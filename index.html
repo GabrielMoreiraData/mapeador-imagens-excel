@@ -645,6 +645,14 @@
       const ERRO_FORMATO = "Formato não aceito: use JPG, PNG ou WEBP.";
       const ERRO_SEM_MODELO = "Carregue o modelo .xlsx antes de adicionar fotos.";
 
+      // RF07/RF08: 300 dpi no tamanho final, com fundo branco.
+      // Mesmas fórmulas de cmParaPixels()/tamanhoEmPixels() e escalaContida()
+      // de src/layout.js, cobertas por tests/layout.test.js.
+      const DPI = 300;
+      const QUALIDADE_JPEG = 0.92;
+      const TAMANHO_CAPA_CM = { largura: 6.8, altura: 6.5 };
+      const TAMANHO_REGISTRO_CM = { largura: 9.6, altura: 7.2 };
+
       const areaDrop = document.getElementById("area-drop");
       const entradaArquivo = document.getElementById("entrada-arquivo");
       const mensagem = document.getElementById("mensagem");
@@ -667,12 +675,149 @@
         modelo: null,
         carregando: false,
         fotosHabilitadas: false,
+        processandoFotos: false,
         fotos: [],
       };
 
       /** Deixa a próxima pintura acontecer antes de uma tarefa pesada. */
       function aguardarPintura() {
         return new Promise((resolver) => requestAnimationFrame(() => resolver()));
+      }
+
+      /** Converte cm em pixels na resolução final (300 dpi). */
+      function cmParaPixels(cm) {
+        return Math.round((cm / 2.54) * DPI);
+      }
+
+      /** Tamanho final em cm da posição: capa ou registro. */
+      function tamanhoFinalCm(indice) {
+        return indice === 0 ? TAMANHO_CAPA_CM : TAMANHO_REGISTRO_CM;
+      }
+
+      /**
+       * Carrega a imagem via <img> + blob URL, usada quando o ambiente não
+       * suporta createImageBitmap (ou a opção imageOrientation falha).
+       * O navegador atual já aplica a orientação EXIF por padrão em <img>
+       * (image-orientation: from-image), então a rotação é preservada.
+       */
+      function decodificarComImagem(arquivo) {
+        return new Promise((resolver, rejeitar) => {
+          const url = URL.createObjectURL(arquivo);
+          const imagem = new Image();
+
+          imagem.decoding = "async";
+          imagem.style.setProperty("image-orientation", "from-image");
+
+          imagem.onload = () => {
+            resolver({
+              fonte: imagem,
+              largura: imagem.naturalWidth,
+              altura: imagem.naturalHeight,
+              liberar: () => URL.revokeObjectURL(url),
+            });
+          };
+
+          imagem.onerror = () => {
+            URL.revokeObjectURL(url);
+            rejeitar(new Error("Não foi possível decodificar a imagem"));
+          };
+
+          imagem.src = url;
+        });
+      }
+
+      /**
+       * Decodifica a imagem com createImageBitmap (RF07) e cai para <img>
+       * quando a API não existe ou rejeita a opção imageOrientation.
+       * @returns {Promise<{ fonte: CanvasImageSource, largura: number,
+       *   altura: number, liberar: () => void }>}
+       */
+      async function decodificarImagem(arquivo) {
+        if (typeof createImageBitmap === "function") {
+          try {
+            const bitmap = await createImageBitmap(arquivo, { imageOrientation: "from-image" });
+
+            return {
+              fonte: bitmap,
+              largura: bitmap.width,
+              altura: bitmap.height,
+              liberar: () => bitmap.close(),
+            };
+          } catch (erro) {
+            console.warn(
+              "createImageBitmap indisponível para esta imagem; usando <img> como alternativa.",
+              erro
+            );
+          }
+        }
+
+        return decodificarComImagem(arquivo);
+      }
+
+      /**
+       * RF07 + RF08: aplica a orientação EXIF, ajusta a foto inteira no
+       * canvas no tamanho final a 300 dpi, centraliza com fundo branco e
+       * exporta em JPEG.
+       * @returns {Promise<{ blob: Blob, buffer: ArrayBuffer, url: string,
+       *   largura: number, altura: number, larguraOrig: number, alturaOrig: number }>}
+       */
+      async function processarFoto(arquivo, indice) {
+        const imagem = await decodificarImagem(arquivo);
+
+        try {
+          const tamanhoCm = tamanhoFinalCm(indice);
+          const largura = cmParaPixels(tamanhoCm.largura);
+          const altura = cmParaPixels(tamanhoCm.altura);
+
+          const canvas = document.createElement("canvas");
+          canvas.width = largura;
+          canvas.height = altura;
+
+          const contexto = canvas.getContext("2d");
+          contexto.fillStyle = "#ffffff";
+          contexto.fillRect(0, 0, largura, altura);
+
+          // "Contain": mesma escala nos dois eixos, sem cortar nem distorcer.
+          const escala = Math.min(largura / imagem.largura, altura / imagem.altura);
+          const desenhoLargura = imagem.largura * escala;
+          const desenhoAltura = imagem.altura * escala;
+
+          contexto.imageSmoothingEnabled = true;
+          contexto.imageSmoothingQuality = "high";
+          contexto.drawImage(
+            imagem.fonte,
+            (largura - desenhoLargura) / 2,
+            (altura - desenhoAltura) / 2,
+            desenhoLargura,
+            desenhoAltura
+          );
+
+          const blob = await new Promise((resolver, rejeitar) => {
+            canvas.toBlob(
+              (resultado) => {
+                if (resultado) {
+                  resolver(resultado);
+                } else {
+                  rejeitar(new Error("Falha ao exportar a imagem"));
+                }
+              },
+              "image/jpeg",
+              QUALIDADE_JPEG
+            );
+          });
+
+          return {
+            blob,
+            buffer: await blob.arrayBuffer(),
+            url: URL.createObjectURL(blob),
+            largura,
+            altura,
+            larguraOrig: imagem.largura,
+            alturaOrig: imagem.altura,
+          };
+        } finally {
+          imagem.liberar();
+        }
       }
 
       /**
@@ -840,11 +985,15 @@
       }
 
       /**
-       * Adiciona um lote de fotos (RF03, RF04, RF05).
-       * O lote é atômico: se algum formato for inválido ou o total passar de
-       * 8, nada é adicionado e o erro bloqueante aparece na tela.
+       * Adiciona um lote de fotos (RF03, RF04, RF05, RF07, RF08).
+       * O lote é atômico: se algum formato for inválido, o total passar de 8
+       * ou uma imagem falhar no processamento, nada é adicionado.
        */
-      function adicionarFotos(arquivos) {
+      async function adicionarFotos(arquivos) {
+        if (estado.processandoFotos) {
+          return;
+        }
+
         if (!estado.fotosHabilitadas) {
           mostrarMensagemEm(mensagemFotos, "erro", ERRO_SEM_MODELO);
           return;
@@ -880,18 +1029,56 @@
           return;
         }
 
-        arquivos.forEach((arquivo, indice) => {
-          estado.fotos.push({
-            nome: arquivo.name || POSICOES[estado.fotos.length],
-            tamanho: arquivo.size,
-            tipo: tipos[indice],
-            url: URL.createObjectURL(arquivo),
-          });
-        });
+        estado.processandoFotos = true;
+        areaFotos.classList.add("drop--carregando");
+        areaFotos.setAttribute("aria-busy", "true");
+        entradaFotos.disabled = true;
+        mostrarMensagemEm(
+          mensagemFotos,
+          "carregando",
+          arquivos.length === 1 ? "Processando 1 foto…" : `Processando ${arquivos.length} fotos…`,
+          "Aplicando orientação EXIF, ajuste sem corte e 300 dpi."
+        );
+        await aguardarPintura();
 
+        const processadas = [];
+
+        try {
+          for (let indice = 0; indice < arquivos.length; indice += 1) {
+            const posicao = estado.fotos.length + indice;
+            const resultado = await processarFoto(arquivos[indice], posicao);
+
+            processadas.push({
+              nome: arquivos[indice].name || POSICOES[posicao],
+              tipo: "image/jpeg",
+              tipoOriginal: tipos[indice],
+              extensao: "jpeg",
+              tamanhoOriginal: arquivos[indice].size,
+              ...resultado,
+            });
+          }
+        } catch (erro) {
+          // Nada entra na grade se uma imagem do lote falhar.
+          processadas.forEach((foto) => URL.revokeObjectURL(foto.url));
+          console.error(erro);
+          mostrarMensagemEm(
+            mensagemFotos,
+            "erro",
+            "Não foi possível processar uma das imagens.",
+            "Use um arquivo JPG, PNG ou WEBP íntegro. Nenhuma foto foi adicionada."
+          );
+          return;
+        } finally {
+          estado.processandoFotos = false;
+          areaFotos.classList.remove("drop--carregando");
+          areaFotos.removeAttribute("aria-busy");
+          entradaFotos.disabled = !estado.fotosHabilitadas;
+        }
+
+        estado.fotos.push(...processadas);
         renderizarFotos();
 
-        const adicionadas = arquivos.length;
+        const adicionadas = processadas.length;
         mostrarMensagemEm(
           mensagemFotos,
           "ok",

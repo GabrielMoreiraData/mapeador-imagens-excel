@@ -1,6 +1,6 @@
 # Tarefa atual
 
-## Fase: E2
+## Fase: E3
 
 **Executor:** OpenCode (Construtor)  
 **Revisor:** Codex  
@@ -10,15 +10,17 @@
 
 ## Objetivo
 
-Implementar em `index.html` o carregamento de fotos (1 a 8 imagens) por arrastar e soltar e seleção por input, integrando com as validações de formato e limite (RF03, RF04, RF05).
+Implementar o processamento de imagens com orientação EXIF e ajuste sem corte via Canvas API (RF07 e RF08), redimensionando para 300 dpi no tamanho final com faixas brancas quando necessário.
 
 ---
 
 ## Arquivos autorizados nesta fase
 
 - `index.html`
+- `src/layout.js` (se necessário exportar funções auxiliares de cálculo/conversão)
+- `tests/layout.test.js` (caso adicione novas funções puras testáveis em `src/layout.js`)
 
-**Não alterar:** `src/layout.js`, `tests/`, `vendor/`, `assets/`, `SPEC.md`, `AGENTS.md`, `PLAN.md`, `TASKS.md`.  
+**Não alterar:** `vendor/`, `assets/`, `SPEC.md`, `AGENTS.md`, `PLAN.md`, `TASKS.md`.  
 *(Nota para o Revisor: alterações em `PLAN.md` e `TASKS.md` são de gestão do Maestro).*  
 Registrar conclusão em `STATUS.md`.
 
@@ -26,28 +28,24 @@ Registrar conclusão em `STATUS.md`.
 
 ## O que implementar
 
-### RF03 — Aceitar de 1 a 8 imagens (JPG, PNG, WEBP)
-- Área de drop e seleção de arquivos para fotos (habilitada após validação do modelo na Etapa 2).
-- Aceitar múltiplos arquivos simultâneos via `<input type="file" multiple accept="image/jpeg,image/png,image/webp">` e drag-and-drop.
-- Formatos não suportados devem ser rejeitados com mensagem clara: "Formato não aceito: use JPG, PNG ou WEBP.".
-- Pode reaproveitar ou integrar a função pura `validarFotos` de `src/layout.js` (ou a mesma lógica já validada).
+### RF07 — Orientação EXIF e redimensionamento 300 dpi
+- Usar `createImageBitmap(blob, { imageOrientation: "from-image" })` para garantir a rotação EXIF correta da imagem.
+- Renderizar a imagem em `<canvas>` com resolução calculada a 300 dpi com base no tamanho final da área:
+  - 1 polegada = 2,54 cm → 300 dpi = `(cm / 2.54) * 300` pixels (aproximadamente `cm * 118.11` px).
+  - Capa: tamanho final `6,8 × 6,5 cm` → canvas de aprox. `803 × 768 px`.
+  - Registros 1 a 7: tamanho final `9,6 × 7,2 cm` → canvas de aprox. `1134 × 850 px`.
+- Exportar o resultado como JPEG (`image/jpeg`, qualidade ~0.90/0.92) em ArrayBuffer/Blob para posterior inserção na planilha.
 
-### RF04 — Limite de fotos
-- Com mais de 8 fotos: exibir erro bloqueante claro na interface. Nenhuma foto deve ser carregada se a lista exceder 8 fotos no envio inicial.
-- Se já houver fotos e o usuário adicionar mais excedendo 8: bloquear e manter a regra rígida de no máximo 8 fotos.
-
-### RF05 — Atribuição inicial de posições
-- 1ª posição = Capa.
-- Posições seguintes = Registros 1 a 7.
-- Exibir contador visível: "X de 8 fotos" (seção 15 do SPEC).
-- Exibir lista/grade com as miniaturas carregadas ou identificação da posição (Capa, Registro 1, etc.).
+### RF08 — Ajuste sem corte (contain / letterbox)
+- A foto inteira deve aparecer na área, sem corte de partes da imagem e sem distorcer proporção.
+- O canvas da área final é preenchido com fundo branco.
+- A imagem redimensionada é centralizada no canvas, com faixas brancas nas sobras horizontais ou verticais.
 
 ---
 
 ## Critério de conclusão
 
-- Com modelo validado, interface permite carregar de 1 a 8 fotos.
-- Tentativa de carregar arquivo não-imagem ou formato inválido acusa erro claro.
-- Tentativa de carregar 9 ou mais fotos bloqueia a operação e emite erro bloqueante.
-- Contador "X de 8 fotos" reflete a quantidade correta.
-- `STATUS.md` atualizado com as entregas e verificações.
+- Fotos carregadas passam pelo pipeline de Canvas com rotação EXIF respeitada.
+- Cada foto processada gera a imagem ajustada no tamanho final exato em cm a 300 dpi com preenchimento branco.
+- `npm test` segue verde caso haja mudanças em `src/layout.js`.
+- `STATUS.md` atualizado com o progresso e verificações.
