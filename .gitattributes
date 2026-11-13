@@ -1,0 +1,6 @@
+# Normaliza EOL no texto, mas preserva os binários byte a byte
+* text=auto
+
+vendor/*.min.js -text
+assets/**/*.jpg -text
+assets/**/*.xlsx -text

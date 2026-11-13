@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.tmp
+~$*.xlsx
+.DS_Store
+Thumbs.db
+.env
+assets/dados-reais/
