@@ -486,6 +486,98 @@
       color: var(--texto-suave);
     }
 
+    /* Etapa 3 — gerar e baixar */
+    .gerar {
+      margin-top: 20px;
+      padding: 20px;
+      border: 1px solid var(--borda);
+      border-radius: var(--raio);
+      background: var(--azul-700);
+    }
+
+    .gerar__topo {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .gerar__topo h2 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: 0.2px;
+    }
+
+    .gerar__dica {
+      margin: 4px 0 0;
+      font-size: 14px;
+      color: var(--texto-suave);
+    }
+
+    .botao {
+      padding: 14px 24px;
+      border: 1px solid #ffb27a;
+      border-radius: 10px;
+      background: var(--laranja);
+      color: #1b1005;
+      font: inherit;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background-color 140ms ease, opacity 140ms ease;
+    }
+
+    .botao:hover:not(:disabled) {
+      background: #ff8a3c;
+    }
+
+    .botao:focus-visible {
+      outline: 3px solid #ffd9bd;
+      outline-offset: 3px;
+    }
+
+    .botao:disabled {
+      border-color: var(--borda);
+      background: #33475c;
+      color: #c6d3e1;
+      cursor: not-allowed;
+      opacity: 0.75;
+    }
+
+    .progresso {
+      margin-top: 16px;
+    }
+
+    .progresso[hidden] {
+      display: none;
+    }
+
+    .progresso__texto {
+      display: block;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--texto);
+    }
+
+    .progresso__trilho {
+      display: block;
+      height: 8px;
+      margin-top: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #0b2239;
+    }
+
+    .progresso__barra {
+      display: block;
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--laranja);
+      transition: width 180ms ease;
+    }
+
     @media (max-width: 860px) {
       .colunas {
         grid-template-columns: 1fr;
@@ -610,6 +702,25 @@
       <h3 class="subtitulo">Registros</h3>
       <ul id="grade-registros" class="grade grade--registros" aria-label="Posições dos registros 1 a 7"></ul>
     </section>
+
+    <section id="secao-gerar" class="gerar" aria-labelledby="titulo-gerar">
+      <div class="gerar__topo">
+        <div>
+          <h2 id="titulo-gerar">Gerar</h2>
+          <p class="gerar__dica">O download começa automaticamente. O arquivo original não é alterado.</p>
+        </div>
+        <button id="botao-gerar" class="botao" type="button" disabled>Gerar relatório</button>
+      </div>
+
+      <div id="progresso-gerar" class="progresso" role="status" aria-live="polite" hidden>
+        <span id="progresso-texto" class="progresso__texto">Gerando planilha…</span>
+        <span class="progresso__trilho" aria-hidden="true">
+          <span id="progresso-barra" class="progresso__barra"></span>
+        </span>
+      </div>
+
+      <p id="mensagem-gerar" class="mensagem" role="status" aria-live="polite" hidden></p>
+    </section>
   </main>
 
   <script src="vendor/exceljs.min.js"></script>
@@ -619,6 +730,9 @@
 
       const ABA_OBRIGATORIA = "Relatório de ensaio";
       const EXTENSAO = ".xlsx";
+      const MIME_XLSX =
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+      const SUFIXO_ARQUIVO = "-com-fotos";
 
       // Mesmas regras da função pura validarFotos() de src/layout.js.
       // A página abre direto do disco (file://), então não há módulo ES
@@ -750,6 +864,11 @@
       const avisoFotos = document.getElementById("aviso-fotos");
       const gradeCapa = document.getElementById("grade-capa");
       const gradeRegistros = document.getElementById("grade-registros");
+      const botaoGerar = document.getElementById("botao-gerar");
+      const mensagemGerar = document.getElementById("mensagem-gerar");
+      const progressoGerar = document.getElementById("progresso-gerar");
+      const progressoTexto = document.getElementById("progresso-texto");
+      const progressoBarra = document.getElementById("progresso-barra");
 
       // Só leitura nesta fase (RF11). O ArrayBuffer fica guardado para as
       // próximas etapas (fotos e geração), sem tocar no arquivo de origem.
@@ -758,6 +877,7 @@
         carregando: false,
         fotosHabilitadas: false,
         processandoFotos: false,
+        gerando: false,
         fotos: [],
       };
 
@@ -1049,6 +1169,62 @@
         elemento.replaceChildren();
       }
 
+      /** O botão só libera com modelo validado e pelo menos 1 foto (RF10). */
+      function podeGerar() {
+        return Boolean(estado.modelo) && estado.fotos.length > 0 && !estado.gerando;
+      }
+
+      /** Reflete no botão se o relatório já pode ser gerado. */
+      function atualizarBotaoGerar() {
+        const habilitado = podeGerar();
+        botaoGerar.disabled = !habilitado;
+        botaoGerar.setAttribute("aria-disabled", String(!habilitado));
+      }
+
+      /**
+       * Nome do download derivado do modelo, sem alterar o arquivo original
+       * (RF11): "modelo.xlsx" vira "modelo-com-fotos.xlsx".
+       */
+      function nomeArquivoGerado(nomeModelo) {
+        const base = String(nomeModelo || "")
+          .trim()
+          .replace(/\.xlsx$/i, "");
+
+        return `${base || "relatorio-ensaio"}${SUFIXO_ARQUIVO}${EXTENSAO}`;
+      }
+
+      /** Mostra a barra de progresso com um texto e um percentual. */
+      function exibirProgresso(texto, percentual) {
+        progressoGerar.hidden = false;
+        progressoTexto.textContent = texto;
+        progressoBarra.style.width = `${percentual}%`;
+      }
+
+      /** Esconde a barra de progresso e zera o preenchimento. */
+      function esconderProgresso() {
+        progressoGerar.hidden = true;
+        progressoTexto.textContent = "Gerando planilha…";
+        progressoBarra.style.width = "0%";
+      }
+
+      /** Dispara o download de um Blob via link temporário. */
+      function baixarBlob(blob, nome) {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+
+        link.href = url;
+        link.download = nome;
+        link.rel = "noopener";
+        link.style.display = "none";
+
+        document.body.append(link);
+        link.click();
+        link.remove();
+
+        // Dá tempo de o navegador iniciar o download antes de liberar a URL.
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
       function formatarTamanho(bytes) {
         const unidades = ["B", "KB", "MB", "GB"];
         let valor = bytes;
@@ -1085,6 +1261,9 @@
         atualizarCartao();
         habilitarFotos(false);
         limparMensagemEm(mensagemFotos);
+        limparMensagemEm(mensagemGerar);
+        esconderProgresso();
+        atualizarBotaoGerar();
         definirEtapa(1);
       }
 
@@ -1259,6 +1438,8 @@
 
         estado.fotos.push(...processadas);
         renderizarFotos();
+        atualizarBotaoGerar();
+        definirEtapa(3);
 
         const adicionadas = processadas.length;
         mostrarMensagemEm(
@@ -1338,6 +1519,63 @@
       }
 
       /**
+       * Gera o .xlsx com as fotos e dispara o download (RF10 e RF11).
+       * `montarRelatorio` trabalha sobre uma cópia em memória do modelo, então
+       * o arquivo original nunca é alterado. O nome do download é derivado do
+       * modelo e o Blob usa o MIME oficial de .xlsx.
+       */
+      async function gerarRelatorio() {
+        if (!podeGerar()) {
+          return;
+        }
+
+        estado.gerando = true;
+        atualizarBotaoGerar();
+        definirEtapa(3);
+        limparMensagemEm(mensagemGerar);
+        botaoGerar.setAttribute("aria-busy", "true");
+        exibirProgresso("Gerando planilha…", 5);
+
+        try {
+          await aguardarPintura();
+
+          exibirProgresso("Preparando o modelo…", 20);
+          await aguardarPintura();
+          const workbook = await montarRelatorio();
+
+          exibirProgresso("Inserindo as fotos…", 60);
+          await aguardarPintura();
+          const buffer = await workbook.xlsx.writeBuffer();
+
+          exibirProgresso("Finalizando o arquivo…", 90);
+          const blob = new Blob([buffer], { type: MIME_XLSX });
+          const nome = nomeArquivoGerado(estado.modelo && estado.modelo.nome);
+
+          baixarBlob(blob, nome);
+          exibirProgresso("Planilha pronta.", 100);
+          mostrarMensagemEm(
+            mensagemGerar,
+            "ok",
+            "Relatório gerado com sucesso! ",
+            `Download iniciado: ${nome}`
+          );
+        } catch (erro) {
+          console.error(erro);
+          esconderProgresso();
+          mostrarMensagemEm(
+            mensagemGerar,
+            "erro",
+            "Não foi possível gerar o relatório.",
+            "Confira se o modelo e as fotos continuam válidos e tente novamente."
+          );
+        } finally {
+          estado.gerando = false;
+          botaoGerar.removeAttribute("aria-busy");
+          atualizarBotaoGerar();
+        }
+      }
+
+      /**
        * Lê o .xlsx e valida a aba "Relatório de ensaio" (RF01 e RF02).
        * O arquivo é apenas lido; nada é gravado.
        */
@@ -1399,7 +1637,8 @@
           atualizarCartao();
           habilitarFotos(true);
           limparMensagemEm(mensagemFotos);
-          definirEtapa(2);
+          atualizarBotaoGerar();
+          definirEtapa(estado.fotos.length ? 3 : 2);
           mostrarMensagemEm(mensagem,
             "ok",
             "Modelo carregado com sucesso.",
@@ -1510,9 +1749,13 @@
         });
       });
 
+      botaoGerar.addEventListener("click", gerarRelatorio);
+
       limparMensagemEm(mensagem);
       limparMensagemEm(mensagemFotos);
+      limparMensagemEm(mensagemGerar);
       habilitarFotos(false);
+      atualizarBotaoGerar();
       definirEtapa(1);
       atualizarCartao();
       renderizarFotos();

@@ -1,6 +1,6 @@
 # Tarefa atual
 
-## Fase: E5
+## Fase: E6
 
 **Executor:** OpenCode (Construtor)  
 **Revisor:** Codex  
@@ -10,40 +10,43 @@
 
 ## Objetivo
 
-Implementar os testes formais de preservação do modelo (seção 6 do SPEC) em `tests/preservacao.test.js` rodando no Vitest (`npm test`).
+Implementar a geração e download da planilha final no frontend (`index.html`), habilitando o botão "Gerar relatório" (RF10), disparando o download do arquivo `.xlsx` resultante via `Blob` / link temporário sem modificar o arquivo original (RF11), com feedback de progresso e sucesso na interface.
 
 ---
 
 ## Arquivos autorizados nesta fase
 
-- `tests/preservacao.test.js`
-- `src/layout.js` (apenas se for necessário exportar rotina de comparação pura de workbook)
+- `index.html`
 
-**Não alterar:** `index.html`, `vendor/`, `assets/`, `SPEC.md`, `AGENTS.md`, `PLAN.md`, `TASKS.md`.  
+**Não alterar:** `src/layout.js`, `tests/`, `vendor/`, `assets/`, `SPEC.md`, `AGENTS.md`, `PLAN.md`, `TASKS.md`, `docs/`.  
 *(Nota para o Revisor: alterações em `PLAN.md` e `TASKS.md` são de gestão do Maestro).*  
 Registrar conclusão em `STATUS.md`.
 
 ---
 
-## O que testar (seção 6 do SPEC)
+## O que implementar (RF10, RF11 e seção 15 do SPEC)
 
-O teste deve comparar o modelo de entrada (`assets/modelo/modelo-exemplo-ficticio.xlsx`) com o modelo de saída após a inserção de fotos (1 a 8 fotos fictícias de `assets/fotos-exemplo/`):
-
-1. **Abas intocáveis:**
-   - Abas "Dados" e "Formulário" (e quaisquer outras que não sejam "Relatório de ensaio") devem ter exatamente os mesmos valores, fórmulas, formatações e 0 imagens.
-2. **Aba "Relatório de ensaio":**
-   - Todas as fórmulas pré-existentes devem ser preservadas sem alteração.
-   - Formatação, bordas, larguras de coluna e alturas de linha devem ser idênticas ao original.
-   - Células que não receberam fotos não podem ter valores alterados.
-   - Comentários existentes devem ser preservados.
-3. **Contagem de imagens:**
-   - Apenas a aba "Relatório de ensaio" tem imagens (exatamente a quantidade inserida).
-   - Nenhuma imagem duplicada ou em abas erradas.
+1. **Botão "Gerar relatório":**
+   - Habilitado apenas quando o modelo estiver carregado e houver pelo menos 1 foto válida carregada.
+   - Enquanto o modelo ou as fotos não estiverem prontos, o botão fica desabilitado (`disabled`).
+2. **Geração e Download (RF10 e RF11):**
+   - Ao clicar em "Gerar relatório":
+     - Monta o relatório com as fotos usando a rotina implementada na E4 (`montarRelatorio` / `writeBuffer`).
+     - Gera o `Blob` com o tipo MIME correto de Excel (`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`).
+     - Dispara o download automático no navegador (via elemento `<a>` temporário com atributo `download`).
+     - Nome do arquivo gerado: derivado do modelo ou com sufixo (ex: `<nome-modelo-sem-extensao>-com-fotos.xlsx` ou `relatorio-ensaio.xlsx`).
+     - O arquivo original **nunca** é alterado (RF11).
+3. **Feedback visual na interface:**
+   - Indicador de etapas avança para etapa 3 ("Gerar").
+   - Mensagem de status / barra de progresso durante a geração: "Gerando planilha..."
+   - Mensagem de conclusão: "Relatório gerado com sucesso! Download iniciado: <nome-arquivo>.xlsx" (seção 15 do SPEC).
+   - Tratamento de erro: caso ocorra falha na geração/exportação, exibir erro claro na tela (`role="alert"`).
 
 ---
 
 ## Critério de conclusão
 
-- Novo arquivo `tests/preservacao.test.js` criado e executável via `npm test`.
-- Todos os testes de layout anteriores + novos testes de preservação passam 100% verde.
-- `STATUS.md` atualizado com os resultados e detalhes da verificação.
+- Com modelo e fotos carregados, o botão "Gerar relatório" fica ativo.
+- Clicar no botão gera e faz o download de um `.xlsx` válido contendo as fotos e o modelo preservado.
+- Feedback de sucesso exibido na tela.
+- `STATUS.md` atualizado com o progresso e verificações.

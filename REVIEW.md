@@ -1,10 +1,12 @@
 ﻿# Revisão
 
-## Fase E5 — APROVADO (segunda revisão, 2026-11-13)
+## Fase E6 — APROVADO (2026-11-13)
 
-- A limitação conhecida de comentários legados no round-trip do ExcelJS foi registrada formalmente em `docs/decisoes.md` (2026-11-13), conforme a seção 6 do SPEC, e já está descrita em `STATUS.md`. O risco fica documentado para validação caso o modelo corporativo contenha comentários.
-- Os testes de preservação comparam abas, valores/fórmulas, estilos, mesclagens, dimensões de linhas/colunas e contagem de imagens; para cada quantidade de 1 a 8, verificam imagens apenas em “Relatório de ensaio” e zero nas outras abas.
-- `npm test` foi confirmado na revisão anterior: **2 arquivos, 43 testes aprovados**. Desde então, a mudança relevante para este parecer foi a inclusão do registro técnico em `docs/decisoes.md`.
-- Escopo: `tests/preservacao.test.js` e `STATUS.md` são do Construtor; `PLAN.md` e `TASKS.md` são atualizações do Maestro. `docs/decisoes.md` contém o registro técnico exigido pela seção 6 do SPEC.
+- `index.html:1172-1182` — o botão só habilita quando existe modelo, ao menos uma foto e nenhuma geração em andamento.
+- `index.html:1474-1518, 1527-1575` — a geração monta um workbook novo a partir do buffer em memória, serializa com `writeBuffer()`, cria Blob com `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` e inicia o download por link temporário. Não grava nem sobrescreve o arquivo original.
+- `index.html:1184-1226, 1532-1574` — nome de saída derivado do modelo, progresso visual em etapas, confirmação com o nome do arquivo e erro acessível (`role="alert"`) em caso de falha.
+- `STATUS.md:22-33` registra validação no Chrome com downloads interceptados, incluindo botão desabilitado/habilitado, MIME e nome, duas gerações sem corromper o buffer, 8 fotos e erro simulado.
+- `npm.cmd test`: **2 arquivos, 43 testes aprovados**.
+- Diff: `index.html` e `STATUS.md` são os arquivos do Construtor; `PLAN.md` e `TASKS.md` são atualizações de gestão do Maestro, conforme a nota da tarefa.
 
-Aprovado com a limitação documentada acima; a preservação de comentários deve ser reavaliada se o modelo final contiver comentários.
+Não encontrei problemas nos requisitos revisados.

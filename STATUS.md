@@ -1,5 +1,43 @@
 # Status
 
+## Fase E6 (2026-11-13)
+
+**Construtor:** OpenCode
+
+### Implementação
+
+- `index.html`: nova seção "Gerar" (`#secao-gerar`) ao fim do fluxo, com o botão `#botao-gerar` ("Gerar relatório"), a barra de progresso `#progresso-gerar` (`role="status"`, `aria-live="polite"`, oculta por padrão) e a área de mensagem `#mensagem-gerar`.
+- O botão começa desabilitado (`disabled` + `aria-disabled="true"`). `podeGerar()` só libera com modelo validado, pelo menos 1 foto e nenhuma geração em andamento; `atualizarBotaoGerar()` é chamado ao carregar/redefinir o modelo, ao adicionar fotos e ao terminar a geração.
+- Indicador de etapas: a etapa 3 ("Gerar") vira atual assim que a primeira foto é adicionada; com apenas o modelo a etapa 2 continua atual; redefinir o modelo volta para a 1.
+- Nome do download derivado do modelo (RF11): `nomeArquivoGerado()` remove o `.xlsx`, acrescenta `-com-fotos` e usa `relatorio-ensaio` como base de reserva. `modelo-exemplo-ficticio.xlsx` vira `modelo-exemplo-ficticio-com-fotos.xlsx`.
+- Blob com o MIME oficial `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`. `baixarBlob()` cria um `<a download>` temporário, dispara o clique, remove o link e revoga a URL após 1 s.
+- `gerarRelatorio()` usa `montarRelatorio()` (que continua trabalhando sobre uma cópia em memória do modelo, sem tocar no arquivo de origem), serializa com `workbook.xlsx.writeBuffer()` e baixa o resultado. O botão fica `aria-busy` durante a geração e é restaurado no `finally`, inclusive em erro.
+- Feedback (seção 15): progresso "Gerando planilha…" 5%, "Preparando o modelo…" 20%, "Inserindo as fotos…" 60%, "Finalizando o arquivo…" 90%, "Planilha pronta." 100%; sucesso "Relatório gerado com sucesso!" + "Download iniciado: <arquivo>.xlsx". Em erro, o progresso é escondido e aparece "Não foi possível gerar o relatório." com `role="alert"` e `mensagem--erro`.
+- `redefinirModelo()` também limpa a mensagem e o progresso da etapa 3.
+
+### Verificação
+
+- `npm test`: **2 arquivos, 43 testes aprovados** (33 de `layout.test.js` + 10 de `preservacao.test.js`).
+- `node --check` no script embutido: sintaxe válida. `index.html` e `STATUS.md` em UTF-8 com LF, sem caracteres inválidos.
+- Chrome headless (CDP, downloads interceptados) com o `index.html` real, modelo e fotos fictícios:
+  - Inicial: botão desabilitado, etapa 1.
+  - Só o modelo: botão desabilitado, etapa 2.
+  - 1 foto: botão habilitado, etapa 3, `aria-disabled="false"`.
+  - Clique: Blob com MIME correto, download `modelo-exemplo-ficticio-com-fotos.xlsx`, mensagem `Relatório gerado com sucesso! Download iniciado: modelo-exemplo-ficticio-com-fotos.xlsx` (`mensagem--ok`, `role="status"`), progresso 5→20→60→90→100% e botão reabilitado.
+  - Dois cliques seguidos sem alterar o estado: dois `.xlsx` válidos, confirmando que o buffer original do modelo continua íntegro.
+  - 8 fotos: download com 8 imagens, sem exceções nem avisos no console.
+  - Erro simulado em `URL.createObjectURL`: mensagem "Não foi possível gerar o relatório.", `mensagem--erro`, `role="alert"`, progresso escondido, botão reabilitado e 0 exceções não tratadas.
+- ExcelJS nos três downloads (1 foto, repetição, 8 fotos): 1/1/8 imagens na aba "Relatório de ensaio", 0 na aba "Dados", contagem de mídia igual à de imagens e as 801 células da aba de relatório + a célula de "Dados" idênticas ao modelo (valor, fórmula, formato, fonte, preenchimento e borda).
+- Âncoras e tamanhos preservados da E4: `G10` (6,80 × 6,51 cm) e `C185`, `C206`, `C221`, `C250`, `C265`, `C294`, `C309` (9,60 × 7,20 cm).
+- Excel 16 (COM) no arquivo de 8 fotos: abre com 2 abas, 8 formas na aba de relatório e 0 em "Dados", com os mesmos tamanhos, âncoras e células.
+- Nenhuma alteração em `src/layout.js`, `tests/`, `vendor/` ou `assets/`; o arquivo original do modelo nunca é gravado.
+
+### Pendente para o Revisor
+
+- Revalidar a E6.
+
+---
+
 ## Fase E5 (2026-11-13)
 
 **Construtor:** OpenCode
