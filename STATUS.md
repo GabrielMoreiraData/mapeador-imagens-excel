@@ -1,5 +1,39 @@
 # Status
 
+## Fase E5 (2026-11-13)
+
+**Construtor:** OpenCode
+
+### Implementação
+
+- Novo `tests/preservacao.test.js`, executado pelo Vitest junto com `tests/layout.test.js`.
+- O teste carrega o ExcelJS de `vendor/` em um contexto `vm` (mesmo bundle usado pela página) e compara o modelo de entrada com o modelo relido após a inserção das fotos.
+- A inserção do teste repete exatamente a chamada de `montarRelatorio()` em `index.html` (âncora por célula + deslocamento EMU, `ext` em pixels, `editAs: "oneCell"`), usando `AREAS_FOTO` e `calcularAncora` de `src/layout.js`. Como `index.html` é uma IIFE e o Vitest roda em Node, não é possível importar `montarRelatorio` diretamente; a chamada ao ExcelJS é a mesma validada na E4 no navegador e no Excel real.
+- O retrato de cada aba inclui: valores e fórmulas (com resultado), formato numérico, fonte, preenchimento, borda, alinhamento, proteção, comentário, mesclagens, larguras de coluna, alturas de linha, colunas/linhas ocultas e níveis de estrutura.
+- Também são comparados o nome/ordem das abas, a largura/altura padrão e os nomes definidos do workbook. Imagens são verificadas à parte: apenas na aba "Relatório de ensaio", com a quantidade exata e sem mídia duplicada.
+
+### Cobertura
+
+- 1 a 8 fotos fictícias de `assets/fotos-exemplo/` (cada quantidade em um teste), sempre com a aba "Dados" e todas as demais abas intocadas e com 0 imagens.
+- Modelo enriquecido em memória com duas fórmulas (`SUM`, `ROUND`), fonte, preenchimento, borda, alinhamento, largura de coluna e altura de linha — garante que a preservação de fórmulas e formatações seja realmente exercitada, já que o modelo de exemplo não tem fórmulas.
+- As 8 áreas mescladas da aba "Relatório de ensaio" continuam exatamente iguais.
+
+### Verificação
+
+- `npm test`: **2 arquivos, 43 testes aprovados** (33 de `layout.test.js` + 10 de `preservacao.test.js`), em ~5,7 s.
+- `tests/preservacao.test.js` e `STATUS.md` em UTF-8 com LF, sem caracteres inválidos.
+- Nenhuma alteração em `index.html`, `vendor/` ou `assets/`.
+
+### Observação sobre comentários
+
+O modelo de exemplo não possui comentários. Em teste exploratório, o bundle do ExcelJS grava comentários legados (`comments1.xml` + VML), mas não os lê de volta em `cell.note` ao recarregar. Como o modelo atual tem 0 comentários, não há diferença no teste. Se o modelo real tiver comentários, o retrato da E5 vai acusar a perda; nesse caso a seção 6 do SPEC exige registrar em `docs/decisoes.md` e avisar o usuário antes da entrega.
+
+### Pendente para o Revisor
+
+- Revalidar a E5.
+
+---
+
 ## Fase E4 (2026-11-13)
 
 **Construtor:** OpenCode

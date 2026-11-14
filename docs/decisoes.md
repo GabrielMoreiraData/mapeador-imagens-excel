@@ -67,3 +67,10 @@ Registro cronológico das decisões tomadas no projeto.
   (2 commits) foi preservado junto com o projeto.
 - **Validação:** `npm test` no novo local — 1 teste aprovado.
 - `SPEC.md` continua sem alterações.
+
+
+## 2026-11-13 — Limitação conhecida: comentários de células no ExcelJS
+
+- **Constatação (Fase E5):** Conforme previsto na seção 6 e seção 11 do `SPEC.md`, a biblioteca `ExcelJS` (v4.4.0) não preserva de forma consistente comentários legados (`cell.note` ou thread comments) após ciclos completos de leitura e escrita (`load` -> `writeBuffer`).
+- **Impacto no projeto:** O modelo fictício de exemplo não utiliza comentários nas células e as fórmulas, formatações, células mescladas e valores permanecem 100% preservados em todas as abas. Caso o modelo corporativo final contenha anotações em células, recomenda-se que essas notas fiquem em células de texto padrão ou que sejam validadas na pendência P1/E7.
+- **Ação:** Registrado formalmente em `docs/decisoes.md` conforme a exigência da Seção 6 do `SPEC.md`.

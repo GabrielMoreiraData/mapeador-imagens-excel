@@ -1,11 +1,10 @@
 ﻿# Revisão
 
-## Fase E4 — APROVADO (2026-11-13)
+## Fase E5 — APROVADO (segunda revisão, 2026-11-13)
 
-- `src/layout.js:117-192` e `index.html:658-731` — as oito áreas correspondem à seção 5: Capa `G10:K22` e Registros 1–7 em `C185:I199`, `C206:I220`, `C221:I235`, `C250:I264`, `C265:I279`, `C294:I308` e `C309:I323`.
-- `src/layout.js:247-276` e `index.html:820-877, 1279-1337` — offsets são calculados a partir da grade real, centralizados e passados ao ExcelJS como âncora nativa e extensão. A montagem carrega uma cópia do buffer e adiciona imagens somente à worksheet `Relatório de ensaio`; não altera valores/fórmulas das células nem adiciona imagens a `Dados` ou outras abas. STATUS registra comparação das células antes/depois no arquivo de saída.
-- `index.html:1293-1337` — apenas percorre `estado.fotos`; posições sem imagem não recebem chamada `addImage` nem causam erro. A rotina também retorna erro claro se não houver nenhuma foto para gerar.
-- `npm.cmd test`: **1 arquivo, 33 testes aprovados**.
-- Diff: `index.html`, `src/layout.js`, `tests/layout.test.js` e `STATUS.md` são os arquivos de implementação autorizados; `PLAN.md` e `TASKS.md` são atualizações de gestão do Maestro, conforme a nota de escopo da tarefa.
+- A limitação conhecida de comentários legados no round-trip do ExcelJS foi registrada formalmente em `docs/decisoes.md` (2026-11-13), conforme a seção 6 do SPEC, e já está descrita em `STATUS.md`. O risco fica documentado para validação caso o modelo corporativo contenha comentários.
+- Os testes de preservação comparam abas, valores/fórmulas, estilos, mesclagens, dimensões de linhas/colunas e contagem de imagens; para cada quantidade de 1 a 8, verificam imagens apenas em “Relatório de ensaio” e zero nas outras abas.
+- `npm test` foi confirmado na revisão anterior: **2 arquivos, 43 testes aprovados**. Desde então, a mudança relevante para este parecer foi a inclusão do registro técnico em `docs/decisoes.md`.
+- Escopo: `tests/preservacao.test.js` e `STATUS.md` são do Construtor; `PLAN.md` e `TASKS.md` são atualizações do Maestro. `docs/decisoes.md` contém o registro técnico exigido pela seção 6 do SPEC.
 
-Não encontrei problemas nos requisitos revisados.
+Aprovado com a limitação documentada acima; a preservação de comentários deve ser reavaliada se o modelo final contiver comentários.

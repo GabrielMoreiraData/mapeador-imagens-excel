@@ -1,6 +1,6 @@
 # Tarefa atual
 
-## Fase: E4
+## Fase: E5
 
 **Executor:** OpenCode (Construtor)  
 **Revisor:** Codex  
@@ -10,52 +10,40 @@
 
 ## Objetivo
 
-Implementar a inserção das fotos processadas (Capa e Registros 1 a 7) na aba "Relatório de ensaio" do workbook ExcelJS usando posicionamento com âncora/deslocamento centralizado (seção 5 do SPEC).
+Implementar os testes formais de preservação do modelo (seção 6 do SPEC) em `tests/preservacao.test.js` rodando no Vitest (`npm test`).
 
 ---
 
 ## Arquivos autorizados nesta fase
 
-- `index.html`
-- `src/layout.js` (para cálculo ou conversões de âncoras/células/EMU se necessário)
-- `tests/layout.test.js` (testes de funções adicionadas a `src/layout.js`)
+- `tests/preservacao.test.js`
+- `src/layout.js` (apenas se for necessário exportar rotina de comparação pura de workbook)
 
-**Não alterar:** `vendor/`, `assets/`, `SPEC.md`, `AGENTS.md`, `PLAN.md`, `TASKS.md`.  
+**Não alterar:** `index.html`, `vendor/`, `assets/`, `SPEC.md`, `AGENTS.md`, `PLAN.md`, `TASKS.md`.  
 *(Nota para o Revisor: alterações em `PLAN.md` e `TASKS.md` são de gestão do Maestro).*  
 Registrar conclusão em `STATUS.md`.
 
 ---
 
-## O que implementar
+## O que testar (seção 6 do SPEC)
 
-### Posicionamento e Medidas (seção 5 do SPEC)
+O teste deve comparar o modelo de entrada (`assets/modelo/modelo-exemplo-ficticio.xlsx`) com o modelo de saída após a inserção de fotos (1 a 8 fotos fictícias de `assets/fotos-exemplo/`):
 
-| Elemento | Área na planilha | Área (cm) | Tamanho final da foto (cm) |
-|---|---|---|---|
-| Capa | `G10:K22` | 8,84 × 8,94 | **6,8 × 6,5** |
-| Registro 1 | `C185:I199` | 12,44 × 7,54 | **9,6 × 7,2** |
-| Registro 2 | `C206:I220` | 12,44 × 7,54 | **9,6 × 7,2** |
-| Registro 3 | `C221:I235` | 12,44 × 7,49 | **9,6 × 7,2** |
-| Registro 4 | `C250:I264` | 12,44 × 7,54 | **9,6 × 7,2** |
-| Registro 5 | `C265:I279` | 12,44 × 7,54 | **9,6 × 7,2** |
-| Registro 6 | `C294:I308` | 12,44 × 7,54 | **9,6 × 7,2** |
-| Registro 7 | `C309:I323` | 12,44 × 7,54 | **9,6 × 7,2** |
-
-### Inserção via ExcelJS
-
-1. Adicionar imagem ao workbook:
-   `const imageId = workbook.addImage({ buffer, extension: 'jpeg' });`
-2. Adicionar imagem à worksheet ("Relatório de ensaio") usando âncora de duas células ou de célula única com offset:
-   - Centralizar a foto na área correspondente.
-   - Posições sem foto permanecem vazias sem erro (RF09).
-   - Não alterar nenhuma outra aba (ex: "Dados" e "Formulário" intocadas - seção 2 e 6).
-   - Não alterar fórmulas ou valores de células pré-existentes.
+1. **Abas intocáveis:**
+   - Abas "Dados" e "Formulário" (e quaisquer outras que não sejam "Relatório de ensaio") devem ter exatamente os mesmos valores, fórmulas, formatações e 0 imagens.
+2. **Aba "Relatório de ensaio":**
+   - Todas as fórmulas pré-existentes devem ser preservadas sem alteração.
+   - Formatação, bordas, larguras de coluna e alturas de linha devem ser idênticas ao original.
+   - Células que não receberam fotos não podem ter valores alterados.
+   - Comentários existentes devem ser preservados.
+3. **Contagem de imagens:**
+   - Apenas a aba "Relatório de ensaio" tem imagens (exatamente a quantidade inserida).
+   - Nenhuma imagem duplicada ou em abas erradas.
 
 ---
 
 ## Critério de conclusão
 
-- Função/rotina em memória capaz de carregar o modelo e inserir as fotos nas posições exatas calculadas.
-- Posições sem foto não causam erro.
-- `npm test` verde para todas as rotinas em `src/layout.js`.
-- `STATUS.md` atualizado com o progresso e verificações.
+- Novo arquivo `tests/preservacao.test.js` criado e executável via `npm test`.
+- Todos os testes de layout anteriores + novos testes de preservação passam 100% verde.
+- `STATUS.md` atualizado com os resultados e detalhes da verificação.
