@@ -101,3 +101,178 @@ export function escalaContida(larguraOrig, alturaOrig, larguraAlvo, alturaAlvo) 
   return Math.min(larguraAlvo / larguraOrig, alturaAlvo / alturaOrig);
 }
 
+/** Pixel de 96 dpi, unidade aceita por `ext` no ExcelJS. */
+export const PX_POR_CM = 96 / 2.54;
+
+/**
+ * EMU por pixel de 96 dpi (1 polegada = 914 400 EMU / 96).
+ * 1 cm = 360 000 EMU, então 1 cm ≈ 37,795 px.
+ */
+export const EMU_POR_PX = 9525;
+
+/**
+ * Áreas confirmadas da aba "Relatório de ensaio" (seção 5 do SPEC).
+ * Cada área começa na célula superior esquerda e termina na inferior direita.
+ */
+export const AREAS_FOTO = Object.freeze(
+  [
+    {
+      posicao: "Capa",
+      colunaInicio: "G",
+      linhaInicio: 10,
+      colunaFim: "K",
+      linhaFim: 22,
+      larguraCm: 8.84,
+      alturaCm: 8.94,
+    },
+    {
+      posicao: "Registro 1",
+      colunaInicio: "C",
+      linhaInicio: 185,
+      colunaFim: "I",
+      linhaFim: 199,
+      larguraCm: 12.44,
+      alturaCm: 7.54,
+    },
+    {
+      posicao: "Registro 2",
+      colunaInicio: "C",
+      linhaInicio: 206,
+      colunaFim: "I",
+      linhaFim: 220,
+      larguraCm: 12.44,
+      alturaCm: 7.54,
+    },
+    {
+      posicao: "Registro 3",
+      colunaInicio: "C",
+      linhaInicio: 221,
+      colunaFim: "I",
+      linhaFim: 235,
+      larguraCm: 12.44,
+      alturaCm: 7.49,
+    },
+    {
+      posicao: "Registro 4",
+      colunaInicio: "C",
+      linhaInicio: 250,
+      colunaFim: "I",
+      linhaFim: 264,
+      larguraCm: 12.44,
+      alturaCm: 7.54,
+    },
+    {
+      posicao: "Registro 5",
+      colunaInicio: "C",
+      linhaInicio: 265,
+      colunaFim: "I",
+      linhaFim: 279,
+      larguraCm: 12.44,
+      alturaCm: 7.54,
+    },
+    {
+      posicao: "Registro 6",
+      colunaInicio: "C",
+      linhaInicio: 294,
+      colunaFim: "I",
+      linhaFim: 308,
+      larguraCm: 12.44,
+      alturaCm: 7.54,
+    },
+    {
+      posicao: "Registro 7",
+      colunaInicio: "C",
+      linhaInicio: 309,
+      colunaFim: "I",
+      linhaFim: 323,
+      larguraCm: 12.44,
+      alturaCm: 7.54,
+    },
+  ].map((area) => Object.freeze(area))
+);
+
+/**
+ * Converte a letra da coluna (A, G, AA) no índice 0-based do ExcelJS.
+ * @param {string} letra
+ * @returns {number}
+ */
+export function letraParaIndice(letra) {
+  const texto = String(letra).trim().toUpperCase();
+
+  if (!/^[A-Z]+$/.test(texto)) {
+    throw new Error(`Coluna inválida: ${letra}`);
+  }
+
+  let indice = 0;
+
+  for (const caractere of texto) {
+    indice = indice * 26 + (caractere.charCodeAt(0) - 64);
+  }
+
+  return indice - 1;
+}
+
+/**
+ * Largura de uma coluna em pixels, com a fonte padrão Calibri 11 (MDW = 7 px).
+ * Aproximação usada pelo Excel para a unidade de largura de coluna (seção 5).
+ * @param {number} larguraEmCaracteres
+ * @returns {number}
+ */
+export function larguraColunaEmPixels(larguraEmCaracteres) {
+  return Math.round(larguraEmCaracteres * 7) + 5;
+}
+
+/**
+ * Altura de uma linha em pixels de 96 dpi (o Excel guarda a altura em pontos).
+ * @param {number} alturaEmPontos
+ * @returns {number}
+ */
+export function alturaLinhaEmPixels(alturaEmPontos) {
+  return Math.round((alturaEmPontos * 96) / 72);
+}
+
+/**
+ * Âncora do ExcelJS que centraliza a foto na área da planilha (seção 5).
+ * O ponto centralizado é convertido de cm para pixels e depois percorre a
+ * grade real da planilha, porque o Excel limita o deslocamento ao tamanho da
+ * célula: o deslocamento final é sempre menor que a coluna/linha da âncora.
+ * A extensão da imagem é em pixels de 96 dpi.
+ * @param {{ colunaInicio: string, linhaInicio: number, larguraCm: number, alturaCm: number }} area
+ * @param {{ largura: number, altura: number }} tamanhoFotoCm
+ * @param {{ colunas: number[], linhas: number[] }} grade larguras/alturas em
+ *   pixels, a partir da primeira coluna/linha da área
+ * @returns {{ coluna: number, linha: number, deslocamentoXEmu: number,
+ *   deslocamentoYEmu: number, larguraPx: number, alturaPx: number }}
+ */
+export function calcularAncora(area, tamanhoFotoCm, grade) {
+  let xPx = ((area.larguraCm - tamanhoFotoCm.largura) / 2) * PX_POR_CM;
+  let yPx = ((area.alturaCm - tamanhoFotoCm.altura) / 2) * PX_POR_CM;
+  let coluna = letraParaIndice(area.colunaInicio);
+  let linha = area.linhaInicio - 1;
+
+  for (const largura of grade.colunas) {
+    if (xPx < largura) {
+      break;
+    }
+    xPx -= largura;
+    coluna += 1;
+  }
+
+  for (const altura of grade.linhas) {
+    if (yPx < altura) {
+      break;
+    }
+    yPx -= altura;
+    linha += 1;
+  }
+
+  return {
+    coluna,
+    linha,
+    deslocamentoXEmu: Math.round(xPx * EMU_POR_PX),
+    deslocamentoYEmu: Math.round(yPx * EMU_POR_PX),
+    larguraPx: Math.round(tamanhoFotoCm.largura * PX_POR_CM),
+    alturaPx: Math.round(tamanhoFotoCm.altura * PX_POR_CM),
+  };
+}
+

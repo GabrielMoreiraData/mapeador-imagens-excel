@@ -1,10 +1,11 @@
 ﻿# Revisão
 
-## Fase E3 — APROVADO (segunda revisão, 2026-11-13)
+## Fase E4 — APROVADO (2026-11-13)
 
-- `index.html:697-755` — correção confirmada. `decodificarImagem` tenta `createImageBitmap` com `imageOrientation: "from-image"`; quando a API não existe ou a chamada rejeita, cai para `decodificarComImagem`, que usa `new Image()` e URL temporária. A URL e o bitmap são liberados em seus caminhos de conclusão.
-- `index.html:757-820` — sem regressão no pipeline: canvas continua no tamanho final a 300 dpi, preenchido de branco, com ajuste contain centralizado e escala uniforme; erros de processamento continuam rejeitando o lote sem inserção parcial.
-- `src/layout.js` e `tests/layout.test.js` seguem coerentes com as dimensões e funções puras revisadas anteriormente.
-- `npm.cmd test`: **1 arquivo, 17 testes aprovados**.
+- `src/layout.js:117-192` e `index.html:658-731` — as oito áreas correspondem à seção 5: Capa `G10:K22` e Registros 1–7 em `C185:I199`, `C206:I220`, `C221:I235`, `C250:I264`, `C265:I279`, `C294:I308` e `C309:I323`.
+- `src/layout.js:247-276` e `index.html:820-877, 1279-1337` — offsets são calculados a partir da grade real, centralizados e passados ao ExcelJS como âncora nativa e extensão. A montagem carrega uma cópia do buffer e adiciona imagens somente à worksheet `Relatório de ensaio`; não altera valores/fórmulas das células nem adiciona imagens a `Dados` ou outras abas. STATUS registra comparação das células antes/depois no arquivo de saída.
+- `index.html:1293-1337` — apenas percorre `estado.fotos`; posições sem imagem não recebem chamada `addImage` nem causam erro. A rotina também retorna erro claro se não houver nenhuma foto para gerar.
+- `npm.cmd test`: **1 arquivo, 33 testes aprovados**.
+- Diff: `index.html`, `src/layout.js`, `tests/layout.test.js` e `STATUS.md` são os arquivos de implementação autorizados; `PLAN.md` e `TASKS.md` são atualizações de gestão do Maestro, conforme a nota de escopo da tarefa.
 
-Não encontrei regressões nos arquivos de código revisados.
+Não encontrei problemas nos requisitos revisados.

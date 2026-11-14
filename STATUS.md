@@ -1,5 +1,45 @@
 # Status
 
+## Fase E4 (2026-11-13)
+
+**Construtor:** OpenCode
+
+### Implementação
+
+- `src/layout.js`: novas constantes e funções puras da âncora — `PX_POR_CM`, `EMU_POR_PX`, `AREAS_FOTO` (8 áreas da seção 5), `letraParaIndice`, `larguraColunaEmPixels`, `alturaLinhaEmPixels` e `calcularAncora(area, tamanhoFotoCm, grade)`.
+- `calcularAncora` converte a sobra centralizada de cm para pixels e percorre a grade real da planilha. O deslocamento é sempre menor que a coluna/linha da célula da âncora, porque o Excel limita offsets ao tamanho da célula (confirmado no Excel real: o offset vertical de 1,22 cm da capa era cortado para uma linha de 15 pt).
+- `index.html`: espelha as mesmas regras (`PX_POR_CM`, `EMU_POR_PX`, `AREAS_FOTO`, `letraParaIndice`, `larguraColunaEmPixels`, `alturaLinhaEmPixels`, `gradeDaArea`, `areaEmCm`, `calcularAncora`), pois a página roda em `file://` e não importa módulo ES.
+- `gradeDaArea(planilha, area)` lê as larguras/alturas reais do modelo e aplica os padrões do Excel (8,43 caracteres e 15 pt) quando ausentes; `areaEmCm(grade)` devolve a medida real da área em cm.
+- `montarRelatorio()` carrega uma cópia do modelo, mede a grade de cada área e adiciona somente imagens à aba "Relatório de ensaio", com `{ tl: { nativeCol, nativeColOff, nativeRow, nativeRowOff }, ext, editAs: "oneCell" }`. Posições sem foto não recebem nada e não geram erro. A função ainda não está ligada à interface; o botão de download entra na E6.
+- `tests/layout.test.js`: testes de `letraParaIndice`, `AREAS_FOTO`, `calcularAncora` (incluindo grade, simetria e offset menor que a célula) e das conversões de coluna/linha. O teste de linha 272 passou a esperar `180000`: a sobra vertical é 0,5 cm (≈18,9 px), menor que uma linha de 20 px, então o offset não atravessa a linha.
+
+### Verificação
+
+- `npm test`: **1 arquivo, 33 testes aprovados**.
+- `node --check` no script embutido: sintaxe válida; `index.html`, `src/layout.js` e `tests/layout.test.js` sem caracteres inválidos e sem CRLF (UTF-8 com LF).
+- Chrome headless com o código real da página (cópia temporária com `window.__teste`), modelo fictício e fotos fictícias:
+  - 3 fotos: "3 de 8 fotos", 3 imagens no workbook e 5 posições vazias sem erro.
+  - 8 fotos: "8 de 8 fotos", 8 imagens no workbook, 0 exceções e 0 avisos no console.
+- ExcelJS no `.xlsx` gerado pelo navegador: 8 imagens na aba "Relatório de ensaio" e 0 na aba "Dados"; no parcial, 3 imagens e 0 em "Dados". As 801 células da aba de relatório e a célula da aba "Dados" mantiveram valor, formato, estilo, borda e preenchimento idênticos ao modelo.
+- Cada foto ficou dentro da sua área, com margens simétricas (tolerância de 0,02 cm):
+
+| Posição | Área medida | Foto | Margens esq./dir. | Margens topo/base |
+|---|---|---|---|---|
+| Capa | 8,47 × 6,88 cm | 6,80 × 6,51 cm | 0,83 / 0,83 cm | 0,19 / 0,18 cm |
+| Registros 1–7 | 11,85 × 7,94 cm | 9,60 × 7,20 cm | 1,13 / 1,12 cm | 0,37 / 0,37 cm |
+
+- Excel 16 (COM) no arquivo gerado pelo navegador confirmou os tamanhos 6,80 × 6,51 cm e 9,60 × 7,20 cm, todas as âncoras nas células `G10`/`C185`…`C309` e as margens acima (Capa: 23,62/23,63 pt na horizontal e 5,37/5,13 pt na vertical; Registros: 31,94/31,81 pt e 10,45/10,55 pt). Nenhuma foto cruza a borda da área.
+
+### Nota sobre as medidas (pendência P1 do SPEC)
+
+No modelo de exemplo fictício todas as linhas usam a altura padrão de 15 pt, então a área real medida é menor que a medida nominal da seção 5 do SPEC: Capa 8,47 × 6,88 cm (nominal 8,84 × 8,94) e Registros 11,85 × 7,94 cm (nominal 12,44 × 7,54/7,49). A centralização usa a área real medida para a foto nunca cruzar as bordas. No modelo da empresa, cujas colunas/linhas são as da seção 5, a área medida deve coincidir com a nominal; a pendência P1 continua sendo confirmar isso com o modelo real.
+
+### Pendente para o Revisor
+
+- Revalidar a E4.
+
+---
+
 ## Fase E3 — revisão 2 (2026-11-13)
 
 **Construtor:** OpenCode

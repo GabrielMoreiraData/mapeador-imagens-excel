@@ -653,6 +653,88 @@
       const TAMANHO_CAPA_CM = { largura: 6.8, altura: 6.5 };
       const TAMANHO_REGISTRO_CM = { largura: 9.6, altura: 7.2 };
 
+      // Áreas confirmadas da aba "Relatório de ensaio" (seção 5 do SPEC).
+      // Espelho de AREAS_FOTO de src/layout.js, coberto por tests/layout.test.js.
+      const AREAS_FOTO = [
+        {
+          posicao: "Capa",
+          colunaInicio: "G",
+          linhaInicio: 10,
+          colunaFim: "K",
+          linhaFim: 22,
+          larguraCm: 8.84,
+          alturaCm: 8.94,
+        },
+        {
+          posicao: "Registro 1",
+          colunaInicio: "C",
+          linhaInicio: 185,
+          colunaFim: "I",
+          linhaFim: 199,
+          larguraCm: 12.44,
+          alturaCm: 7.54,
+        },
+        {
+          posicao: "Registro 2",
+          colunaInicio: "C",
+          linhaInicio: 206,
+          colunaFim: "I",
+          linhaFim: 220,
+          larguraCm: 12.44,
+          alturaCm: 7.54,
+        },
+        {
+          posicao: "Registro 3",
+          colunaInicio: "C",
+          linhaInicio: 221,
+          colunaFim: "I",
+          linhaFim: 235,
+          larguraCm: 12.44,
+          alturaCm: 7.49,
+        },
+        {
+          posicao: "Registro 4",
+          colunaInicio: "C",
+          linhaInicio: 250,
+          colunaFim: "I",
+          linhaFim: 264,
+          larguraCm: 12.44,
+          alturaCm: 7.54,
+        },
+        {
+          posicao: "Registro 5",
+          colunaInicio: "C",
+          linhaInicio: 265,
+          colunaFim: "I",
+          linhaFim: 279,
+          larguraCm: 12.44,
+          alturaCm: 7.54,
+        },
+        {
+          posicao: "Registro 6",
+          colunaInicio: "C",
+          linhaInicio: 294,
+          colunaFim: "I",
+          linhaFim: 308,
+          larguraCm: 12.44,
+          alturaCm: 7.54,
+        },
+        {
+          posicao: "Registro 7",
+          colunaInicio: "C",
+          linhaInicio: 309,
+          colunaFim: "I",
+          linhaFim: 323,
+          larguraCm: 12.44,
+          alturaCm: 7.54,
+        },
+      ];
+
+      // Unidades da âncora do ExcelJS (seção 5 do SPEC):
+      // 1 cm = 360 000 EMU e 1 px de 96 dpi = 9 525 EMU.
+      const PX_POR_CM = 96 / 2.54;
+      const EMU_POR_PX = 9525;
+
       const areaDrop = document.getElementById("area-drop");
       const entradaArquivo = document.getElementById("entrada-arquivo");
       const mensagem = document.getElementById("mensagem");
@@ -692,6 +774,106 @@
       /** Tamanho final em cm da posição: capa ou registro. */
       function tamanhoFinalCm(indice) {
         return indice === 0 ? TAMANHO_CAPA_CM : TAMANHO_REGISTRO_CM;
+      }
+
+      /**
+       * Converte a letra da coluna (A, G, AA) no índice 0-based do ExcelJS.
+       * Mesma regra de letraParaIndice() de src/layout.js.
+       */
+      function letraParaIndice(letra) {
+        const texto = String(letra).trim().toUpperCase();
+
+        if (!/^[A-Z]+$/.test(texto)) {
+          throw new Error(`Coluna inválida: ${letra}`);
+        }
+
+        let indice = 0;
+
+        for (const caractere of texto) {
+          indice = indice * 26 + (caractere.charCodeAt(0) - 64);
+        }
+
+        return indice - 1;
+      }
+
+      /**
+       * Largura de uma coluna em pixels com a fonte padrão Calibri 11.
+       * Mesma regra de larguraColunaEmPixels() de src/layout.js.
+       */
+      function larguraColunaEmPixels(larguraEmCaracteres) {
+        return Math.round(larguraEmCaracteres * 7) + 5;
+      }
+
+      /**
+       * Altura de uma linha em pixels de 96 dpi (o Excel guarda em pontos).
+       * Mesma regra de alturaLinhaEmPixels() de src/layout.js.
+       */
+      function alturaLinhaEmPixels(alturaEmPontos) {
+        return Math.round((alturaEmPontos * 96) / 72);
+      }
+
+      /**
+       * Grade real da área na planilha, em pixels, a partir da primeira
+       * célula. Usa as larguras/alturas gravadas no modelo; quando ausentes,
+       * aplica os padrões do Excel (coluna de 8,43 caracteres e linha de 15 pt).
+       */
+      function gradeDaArea(planilha, area) {
+        const colunaInicio = letraParaIndice(area.colunaInicio) + 1;
+        const colunaFim = letraParaIndice(area.colunaFim) + 1;
+        const larguraPadrao = planilha.properties.defaultColWidth || 8.43;
+        const alturaPadrao = planilha.properties.defaultRowHeight || 15;
+
+        const colunas = [];
+        for (let coluna = colunaInicio; coluna <= colunaFim; coluna += 1) {
+          const largura = planilha.getColumn(coluna).width;
+          colunas.push(larguraColunaEmPixels(largura == null ? larguraPadrao : largura));
+        }
+
+        const linhas = [];
+        for (let linha = area.linhaInicio; linha <= area.linhaFim; linha += 1) {
+          const altura = planilha.getRow(linha).height;
+          linhas.push(alturaLinhaEmPixels(altura == null ? alturaPadrao : altura));
+        }
+
+        return { colunas, linhas };
+      }
+
+      /**
+       * Âncora do ExcelJS que centraliza a foto na área (seção 5 do SPEC).
+       * Mesma regra de calcularAncora() de src/layout.js: o ponto centralizado
+       * é convertido de cm para pixels e percorre a grade real da planilha,
+       * porque o Excel limita o deslocamento ao tamanho da célula da âncora.
+       */
+      function calcularAncora(area, tamanhoFotoCm, grade) {
+        let xPx = ((area.larguraCm - tamanhoFotoCm.largura) / 2) * PX_POR_CM;
+        let yPx = ((area.alturaCm - tamanhoFotoCm.altura) / 2) * PX_POR_CM;
+        let coluna = letraParaIndice(area.colunaInicio);
+        let linha = area.linhaInicio - 1;
+
+        for (const largura of grade.colunas) {
+          if (xPx < largura) {
+            break;
+          }
+          xPx -= largura;
+          coluna += 1;
+        }
+
+        for (const altura of grade.linhas) {
+          if (yPx < altura) {
+            break;
+          }
+          yPx -= altura;
+          linha += 1;
+        }
+
+        return {
+          coluna,
+          linha,
+          deslocamentoXEmu: Math.round(xPx * EMU_POR_PX),
+          deslocamentoYEmu: Math.round(yPx * EMU_POR_PX),
+          larguraPx: Math.round(tamanhoFotoCm.largura * PX_POR_CM),
+          alturaPx: Math.round(tamanhoFotoCm.altura * PX_POR_CM),
+        };
       }
 
       /**
@@ -1085,6 +1267,74 @@
           adicionadas === 1 ? "1 foto adicionada." : `${adicionadas} fotos adicionadas.`,
           `Posições preenchidas em ordem: ${POSICOES.slice(0, estado.fotos.length).join(", ")}.`
         );
+      }
+
+      /**
+       * Mede a área real da planilha em cm a partir da grade em pixels.
+       * No modelo da empresa a medida confere com a seção 5 do SPEC; no
+       * modelo de exemplo as linhas padrão deixam a capa mais baixa que a
+       * medida nominal, então prevalece a área real para a foto não cruzar
+       * as bordas da área (pendência P1 do SPEC).
+       */
+      function areaEmCm(grade) {
+        return {
+          larguraCm: grade.colunas.reduce((total, largura) => total + largura, 0) / PX_POR_CM,
+          alturaCm: grade.linhas.reduce((total, altura) => total + altura, 0) / PX_POR_CM,
+        };
+      }
+
+      /**
+       * Carrega uma cópia do modelo em memória e insere as fotos processadas
+       * na aba "Relatório de ensaio" (RF09, RF11 e seção 5 do SPEC).
+       * Só imagens são adicionadas: nenhuma célula, fórmula ou aba é alterada.
+       * Posições sem foto ficam vazias, sem erro.
+       * @returns {Promise<ExcelJS.Workbook>}
+       */
+      async function montarRelatorio() {
+        if (!estado.modelo) {
+          throw new Error(ERRO_SEM_MODELO);
+        }
+
+        if (!estado.fotos.length) {
+          throw new Error("Adicione pelo menos 1 foto antes de gerar o relatório.");
+        }
+
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(estado.modelo.buffer);
+
+        const planilha = workbook.getWorksheet(ABA_OBRIGATORIA);
+
+        if (!planilha) {
+          throw new Error(`Arquivo inválido: aba '${ABA_OBRIGATORIA}' não encontrada.`);
+        }
+
+        estado.fotos.forEach((foto, indice) => {
+          const area = AREAS_FOTO[indice];
+          const grade = gradeDaArea(planilha, area);
+          const ancora = calcularAncora(
+            { ...area, ...areaEmCm(grade) },
+            tamanhoFinalCm(indice),
+            grade
+          );
+          const imageId = workbook.addImage({
+            buffer: foto.buffer,
+            extension: foto.extensao || "jpeg",
+            name: `foto-${indice}`,
+          });
+
+          planilha.addImage(imageId, {
+            tl: {
+              nativeCol: ancora.coluna,
+              nativeColOff: ancora.deslocamentoXEmu,
+              nativeRow: ancora.linha,
+              nativeRowOff: ancora.deslocamentoYEmu,
+            },
+            ext: { width: ancora.larguraPx, height: ancora.alturaPx },
+            editAs: "oneCell",
+          });
+        });
+
+        return workbook;
       }
 
       /**
