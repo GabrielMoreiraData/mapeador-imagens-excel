@@ -78,9 +78,20 @@ function lerFotos(quantidade) {
   );
 }
 
-/** Largura de coluna em pixels, com a fonte padrão Calibri 11. */
+/**
+ * Largura de coluna em pixels a partir da largura gravada no .xlsx
+ * (a unidade do atributo `width` de `<col>`), com Calibri 11 (MDW = 7).
+ * Mesma regra de larguraColunaArmazenadaEmPixels() de index.html.
+ */
+function larguraColunaArmazenadaEmPixels(larguraArmazenada) {
+  return Math.trunc(((256 * larguraArmazenada + Math.trunc(128 / 7)) / 256) * 7);
+}
+
+/** Grade real da área, contando colunas/linhas ocultas como 0 px. */
 function gradeDaArea(planilha, area) {
-  const larguraPadrao = planilha.properties.defaultColWidth || 8.43;
+  const larguraPadrao = planilha.properties.defaultColWidth;
+  const larguraPadraoPx =
+    larguraPadrao == null ? 64 : larguraColunaArmazenadaEmPixels(larguraPadrao);
   const alturaPadrao = planilha.properties.defaultRowHeight || 15;
   const colunas = [];
   const linhas = [];
@@ -90,13 +101,28 @@ function gradeDaArea(planilha, area) {
     coluna <= letraParaIndice(area.colunaFim);
     coluna += 1
   ) {
-    const largura = planilha.getColumn(coluna + 1).width;
-    const caracteres = largura == null ? larguraPadrao : largura;
-    colunas.push(Math.round(caracteres * 7) + 5);
+    const informacao = planilha.getColumn(coluna + 1);
+    const caracteres = informacao.width;
+
+    if (informacao.hidden) {
+      colunas.push(0);
+      continue;
+    }
+
+    colunas.push(
+      caracteres == null ? larguraPadraoPx : larguraColunaArmazenadaEmPixels(caracteres)
+    );
   }
 
   for (let linha = area.linhaInicio; linha <= area.linhaFim; linha += 1) {
-    const altura = planilha.getRow(linha).height;
+    const informacao = planilha.getRow(linha);
+
+    if (informacao.hidden) {
+      linhas.push(0);
+      continue;
+    }
+
+    const altura = informacao.height;
     const pontos = altura == null ? alturaPadrao : altura;
     linhas.push(Math.round((pontos * 96) / 72));
   }

@@ -6,3 +6,11 @@ dist/
 Thumbs.db
 .env
 assets/dados-reais/
+vendor/
+AGENTS.md
+PLAN.md
+REVIEW.md
+SPEC.md
+STATUS.md
+TASKS.md
+assets/modelo/ori - Copia.xlsx

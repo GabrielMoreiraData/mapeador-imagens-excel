@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Relatório de ensaio</title>
+  <title>Inserção de fotos no modelo</title>
   <style>
     :root {
       --azul-900: #071426;
@@ -42,34 +42,41 @@
       line-height: 1.5;
     }
 
-    /* Faixa laranja do topo */
+    /* Cabeçalho integrado ao fundo escuro da página */
     .faixa {
-      background: var(--laranja);
-      color: #06152a;
-      border-bottom: 4px solid var(--laranja-escuro);
+      background: transparent;
+      color: var(--texto);
     }
 
     .faixa__conteudo {
       max-width: 1080px;
       margin: 0 auto;
-      padding: 14px 24px;
+      padding: 14px 859px 10px 3px;
       display: flex;
       flex-wrap: wrap;
       align-items: baseline;
+      justify-content: center;
       gap: 4px 18px;
     }
 
-    .faixa h1 {
-      margin: 0;
-      font-size: 22px;
-      letter-spacing: 0.2px;
+    /* Linha divisória laranja, de ponta a ponta, abaixo do texto */
+    .faixa::after {
+      content: "";
+      display: block;
+      height: 4px;
+      margin-top: 12px;
+      border-radius: 5px;
+      background: #e06000;
     }
 
     .faixa__subtitulo {
       margin: 0;
-      font-size: 15px;
+      font-size: 19px;
       font-weight: 600;
-      color: #10233d;
+      color: #ff7a00;
+      /* O Chrome quebra títulos em duas linhas por padrão (text-wrap: balance)
+         mesmo quando cabem em uma. Aqui o título fica sempre em linha única. */
+      white-space: nowrap;
     }
 
     main {
@@ -428,6 +435,7 @@
 
     /* Vaga de foto: vazia (tracejada) ou preenchida (miniatura) */
     .vaga {
+      position: relative;
       display: grid;
       gap: 6px;
       padding: 10px;
@@ -455,7 +463,7 @@
       width: 100%;
       border-radius: 8px;
       background: #05101f;
-      object-fit: contain;
+      object-fit: fill;
     }
 
     .vaga--capa .vaga__imagem {
@@ -486,6 +494,92 @@
       color: var(--texto-suave);
     }
 
+    /* Girar, setas e remoção sobre a miniatura (RF06 e A3) */
+    .vaga__controles {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 1;
+      display: flex;
+      gap: 4px;
+    }
+
+    .vaga__botao {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 9px;
+      background: rgba(7, 20, 38, 0.9);
+      color: #ffffff;
+      font: inherit;
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+      transition: background-color 140ms ease, border-color 140ms ease;
+    }
+
+    .vaga__botao:hover:not(:disabled) {
+      border-color: #ffb27a;
+      background: var(--laranja);
+      color: #1b1005;
+    }
+
+    .vaga__botao:focus-visible {
+      outline: 3px solid #ffd9bd;
+      outline-offset: 2px;
+    }
+
+    .vaga__botao:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .vaga__botao--remover:hover:not(:disabled) {
+      border-color: #fca5a5;
+      background: #b91c1c;
+      color: #ffffff;
+    }
+
+    /* Faixa legível ao passar o mouse ou focar os controles */
+    .vaga__faixa {
+      position: absolute;
+      right: 8px;
+      bottom: 8px;
+      left: 8px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(7, 20, 38, 0.94);
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 140ms ease;
+    }
+
+    .vaga--preenchida:hover .vaga__faixa,
+    .vaga--preenchida:focus-within .vaga__faixa {
+      opacity: 1;
+    }
+
+    .vaga__vazio-icone {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      margin: 0 auto;
+      border: 1px dashed #4b6f97;
+      border-radius: 50%;
+      color: #8fb0d1;
+      font-size: 22px;
+      line-height: 1;
+    }
+
     /* Etapa 3 — gerar e baixar */
     .gerar {
       margin-top: 20px;
@@ -497,10 +591,17 @@
 
     .gerar__topo {
       display: flex;
-      flex-wrap: wrap;
-      align-items: center;
+      flex-wrap: nowrap;
+      align-items: flex-start;
       justify-content: space-between;
       gap: 16px;
+    }
+
+    /* Coluna de texto com largura estável: a prévia do nome não empurra o
+       formulário nem muda o card de lugar enquanto o usuário digita. */
+    .gerar__texto {
+      flex: 1 1 0;
+      min-width: 0;
     }
 
     .gerar__topo h2 {
@@ -513,6 +614,97 @@
       margin: 4px 0 0;
       font-size: 14px;
       color: var(--texto-suave);
+    }
+
+    /* A prévia fica com altura fixa de duas linhas: nomes longos são
+       truncados com reticências, sem mexer no layout do card. */
+    .gerar__previa {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      height: 3em;
+      overflow: hidden;
+      overflow-wrap: break-word;
+    }
+
+    .gerar__acao {
+      display: flex;
+      flex: 0 0 320px;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 100%;
+      min-width: 0;
+    }
+
+    .campo-nome {
+      display: grid;
+      gap: 6px;
+    }
+
+    .campo-nome__rotulo {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--texto);
+    }
+
+    .campo-nome__controle {
+      display: flex;
+      align-items: stretch;
+      overflow: hidden;
+      border: 1px solid var(--borda);
+      border-radius: 10px;
+      background: var(--azul-caixa);
+    }
+
+    .campo-nome__controle:focus-within {
+      outline: 3px solid #ffd9bd;
+      outline-offset: 2px;
+    }
+
+    .campo-nome--erro .campo-nome__controle {
+      border-color: #8a3548;
+    }
+
+    .campo-nome__entrada {
+      flex: 1 1 auto;
+      min-width: 0;
+      padding: 12px 14px;
+      border: 0;
+      background: transparent;
+      color: var(--texto);
+      font: inherit;
+      font-size: 16px;
+    }
+
+    .campo-nome__entrada:focus {
+      outline: none;
+    }
+
+    .campo-nome__entrada[aria-invalid="true"] {
+      color: var(--vermelho);
+    }
+
+    .campo-nome__sufixo {
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      border-left: 1px solid var(--borda);
+      background: var(--azul-700);
+      color: var(--texto-suave);
+      font-size: 15px;
+      white-space: nowrap;
+    }
+
+    .campo-nome__erro {
+      margin: 0;
+      min-height: 1.5em;
+      color: var(--vermelho);
+      font-size: 14px;
+      visibility: hidden;
+    }
+
+    .campo-nome__erro--ativa {
+      visibility: visible;
     }
 
     .botao {
@@ -594,14 +786,33 @@
       .faixa__conteudo {
         padding: 12px 16px;
       }
+
+      .gerar__acao {
+        flex-basis: 280px;
+      }
+
+      /* Em telas estreitas a mensagem de erro pode ocupar duas linhas: reserva
+         as duas para o botão não se deslocar ao validar o nome. */
+      .campo-nome__erro {
+        min-height: 3em;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .gerar__topo {
+        gap: 12px;
+      }
+
+      .gerar__acao {
+        flex-basis: 220px;
+      }
     }
   </style>
 </head>
 <body>
   <header class="faixa">
     <div class="faixa__conteudo">
-      <h1>Relatório de ensaio</h1>
-      <p class="faixa__subtitulo">Inserção de fotos no modelo</p>
+      <h1 class="faixa__subtitulo">Posicionamento de fotos - Artigo Escolar</h1>
     </div>
   </header>
 
@@ -705,11 +916,27 @@
 
     <section id="secao-gerar" class="gerar" aria-labelledby="titulo-gerar">
       <div class="gerar__topo">
-        <div>
+        <div class="gerar__texto">
           <h2 id="titulo-gerar">Gerar</h2>
-          <p class="gerar__dica">O download começa automaticamente. O arquivo original não é alterado.</p>
+          <p class="gerar__dica">
+            O download começa automaticamente.
+            <span id="previa-nome-saida" class="gerar__previa">Será salvo como relatorio-ensaio.xlsx.</span>
+            O arquivo original não é alterado.
+          </p>
         </div>
-        <button id="botao-gerar" class="botao" type="button" disabled>Gerar relatório</button>
+        <div class="gerar__acao">
+          <div id="campo-nome-saida" class="campo-nome">
+            <label class="campo-nome__rotulo" for="nome-saida">Nome do arquivo</label>
+            <div class="campo-nome__controle">
+              <input id="nome-saida" class="campo-nome__entrada" type="text"
+                     autocomplete="off" spellcheck="false"
+                     aria-describedby="nome-saida-erro">
+              <span class="campo-nome__sufixo" aria-hidden="true">.xlsx</span>
+            </div>
+            <p id="nome-saida-erro" class="campo-nome__erro" role="alert"></p>
+          </div>
+          <button id="botao-gerar" class="botao" type="button" disabled>Gerar relatório</button>
+        </div>
       </div>
 
       <div id="progresso-gerar" class="progresso" role="status" aria-live="polite" hidden>
@@ -732,7 +959,6 @@
       const EXTENSAO = ".xlsx";
       const MIME_XLSX =
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-      const SUFIXO_ARQUIVO = "-com-fotos";
 
       // Mesmas regras da função pura validarFotos() de src/layout.js.
       // A página abre direto do disco (file://), então não há módulo ES
@@ -759,9 +985,9 @@
       const ERRO_FORMATO = "Formato não aceito: use JPG, PNG ou WEBP.";
       const ERRO_SEM_MODELO = "Carregue o modelo .xlsx antes de adicionar fotos.";
 
-      // RF07/RF08: 300 dpi no tamanho final, com fundo branco.
-      // Mesmas fórmulas de cmParaPixels()/tamanhoEmPixels() e escalaContida()
-      // de src/layout.js, cobertas por tests/layout.test.js.
+      // RF07 + Ajuste A1 (orientação do usuário): 300 dpi no tamanho final,
+      // esticando a foto para preencher 100% da área (sem faixas brancas).
+      // Mesmas fórmulas de cmParaPixels()/tamanhoEmPixels() de src/layout.js, cobertas por tests/layout.test.js.
       const DPI = 300;
       const QUALIDADE_JPEG = 0.92;
       const TAMANHO_CAPA_CM = { largura: 6.8, altura: 6.5 };
@@ -869,6 +1095,10 @@
       const progressoGerar = document.getElementById("progresso-gerar");
       const progressoTexto = document.getElementById("progresso-texto");
       const progressoBarra = document.getElementById("progresso-barra");
+      const nomeSaida = document.getElementById("nome-saida");
+      const campoNomeSaida = document.getElementById("campo-nome-saida");
+      const erroNomeSaida = document.getElementById("nome-saida-erro");
+      const previaNomeSaida = document.getElementById("previa-nome-saida");
 
       // Só leitura nesta fase (RF11). O ArrayBuffer fica guardado para as
       // próximas etapas (fotos e geração), sem tocar no arquivo de origem.
@@ -896,6 +1126,7 @@
         return indice === 0 ? TAMANHO_CAPA_CM : TAMANHO_REGISTRO_CM;
       }
 
+      /* GRADE_INICIO */
       /**
        * Converte a letra da coluna (A, G, AA) no índice 0-based do ExcelJS.
        * Mesma regra de letraParaIndice() de src/layout.js.
@@ -917,11 +1148,35 @@
       }
 
       /**
-       * Largura de uma coluna em pixels com a fonte padrão Calibri 11.
+       * Largura máxima de um dígito da fonte padrão Calibri 11, em pixels.
+       * É a unidade usada pelo Excel para converter larguras de coluna.
+       */
+      const LARGURA_MAXIMA_DIGITO_PX = 7;
+
+      /**
+       * Largura de uma coluna em pixels a partir da largura mostrada na
+       * interface do Excel (a que aparece em "Largura da coluna"). Nessa
+       * unidade a coluna padrão de 8,43 caracteres ocupa 64 px.
        * Mesma regra de larguraColunaEmPixels() de src/layout.js.
        */
       function larguraColunaEmPixels(larguraEmCaracteres) {
         return Math.round(larguraEmCaracteres * 7) + 5;
+      }
+
+      /**
+       * Largura de uma coluna em pixels a partir da largura GRAVADA no .xlsx
+       * (atributo `width` de `<col>` e `defaultColWidth` do `sheetFormatPr`).
+       * A unidade gravada não inclui os 5 px de respiro da interface: o Excel
+       * aplica trunc(((256 × largura + trunc(128 ÷ 7)) ÷ 256) × 7) para a
+       * fonte padrão Calibri 11. Ex.: 9,42578125 gravados = 66 px, não 71 px.
+       * Fórmula documentada no ECMA-376 e conferida no Excel real.
+       */
+      function larguraColunaArmazenadaEmPixels(larguraArmazenada) {
+        const passo = Math.trunc(128 / LARGURA_MAXIMA_DIGITO_PX);
+
+        return Math.trunc(
+          ((256 * larguraArmazenada + passo) / 256) * LARGURA_MAXIMA_DIGITO_PX
+        );
       }
 
       /**
@@ -934,28 +1189,67 @@
 
       /**
        * Grade real da área na planilha, em pixels, a partir da primeira
-       * célula. Usa as larguras/alturas gravadas no modelo; quando ausentes,
-       * aplica os padrões do Excel (coluna de 8,43 caracteres e linha de 15 pt).
+       * célula. Usa as larguras/alturas gravadas no modelo (não as da
+       * interface); quando ausentes, aplica os padrões do Excel (coluna de
+       * 8,43 caracteres = 64 px e linha de 15 pt = 20 px). Colunas e linhas
+       * ocultas ocupam 0 px, como na renderização do Excel e do LibreOffice.
        */
       function gradeDaArea(planilha, area) {
         const colunaInicio = letraParaIndice(area.colunaInicio) + 1;
         const colunaFim = letraParaIndice(area.colunaFim) + 1;
-        const larguraPadrao = planilha.properties.defaultColWidth || 8.43;
+        const larguraPadrao = planilha.properties.defaultColWidth;
+        const larguraPadraoPx =
+          larguraPadrao == null
+            ? larguraColunaEmPixels(8.43)
+            : larguraColunaArmazenadaEmPixels(larguraPadrao);
         const alturaPadrao = planilha.properties.defaultRowHeight || 15;
 
         const colunas = [];
-        for (let coluna = colunaInicio; coluna <= colunaFim; coluna += 1) {
-          const largura = planilha.getColumn(coluna).width;
-          colunas.push(larguraColunaEmPixels(largura == null ? larguraPadrao : largura));
+        for (let numero = colunaInicio; numero <= colunaFim; numero += 1) {
+          const coluna = planilha.getColumn(numero);
+
+          if (coluna.hidden) {
+            colunas.push(0);
+            continue;
+          }
+
+          colunas.push(
+            coluna.width == null
+              ? larguraPadraoPx
+              : larguraColunaArmazenadaEmPixels(coluna.width)
+          );
         }
 
         const linhas = [];
-        for (let linha = area.linhaInicio; linha <= area.linhaFim; linha += 1) {
-          const altura = planilha.getRow(linha).height;
+        for (let numero = area.linhaInicio; numero <= area.linhaFim; numero += 1) {
+          const linha = planilha.getRow(numero);
+
+          if (linha.hidden) {
+            linhas.push(0);
+            continue;
+          }
+
+          const altura = linha.height;
           linhas.push(alturaLinhaEmPixels(altura == null ? alturaPadrao : altura));
         }
 
         return { colunas, linhas };
+      }
+
+      /**
+       * Mede a área real visível da planilha em cm a partir da grade em pixels.
+       * As larguras de coluna seguem a unidade gravada no .xlsx e colunas/linhas
+       * ocultas contam 0 px. Assim a medida acompanha o que o Excel renderiza:
+       * no modelo de exemplo as linhas padrão deixam a capa mais baixa que a
+       * medida nominal, e no modelo sanitizado as linhas ocultas reduzem a capa
+       * de 8,94 para 7,25 cm. Prevalece a área real para a foto não cruzar as
+       * bordas da área (pendência P1 do SPEC).
+       */
+      function areaEmCm(grade) {
+        return {
+          larguraCm: grade.colunas.reduce((total, largura) => total + largura, 0) / PX_POR_CM,
+          alturaCm: grade.linhas.reduce((total, altura) => total + altura, 0) / PX_POR_CM,
+        };
       }
 
       /**
@@ -995,6 +1289,7 @@
           alturaPx: Math.round(tamanhoFotoCm.altura * PX_POR_CM),
         };
       }
+      /* GRADE_FIM */
 
       /**
        * Carrega a imagem via <img> + blob URL, usada quando o ambiente não
@@ -1056,21 +1351,86 @@
         return decodificarComImagem(arquivo);
       }
 
+      /* ROTACAO_INICIO */
+      const ROTACAO_PASSO = 90;
+
+      /** Normaliza um ângulo para a faixa 0, 90, 180 ou 270. */
+      function normalizarRotacao(rotacao) {
+        const numero = Number(rotacao);
+        const base = Number.isFinite(numero) ? numero : 0;
+
+        return ((base % 360) + 360) % 360;
+      }
+
+      /** Próximo ângulo no ciclo horário 0 -> 90 -> 180 -> 270 -> 0 (A3). */
+      function proximaRotacao(rotacaoAtual) {
+        return (normalizarRotacao(rotacaoAtual) + ROTACAO_PASSO) % 360;
+      }
+
+      /** Verdadeiro em 90/270, quando largura e altura trocam de papel. */
+      function rotacaoTrocada(rotacao) {
+        const normalizada = normalizarRotacao(rotacao);
+
+        return normalizada === 90 || normalizada === 270;
+      }
+
       /**
-       * RF07 + RF08: aplica a orientação EXIF, ajusta a foto inteira no
-       * canvas no tamanho final a 300 dpi, centraliza com fundo branco e
-       * exporta em JPEG.
+       * Área de desenho, no sistema de coordenadas girado, que cobre o canvas
+       * inteiro. O canvas final continua do tamanho da célula (300 dpi); em
+       * 90/270 a arte é girada e esticada para manter o preenchimento total.
+       */
+      function areaDeDesenho(largura, altura, rotacao) {
+        return rotacaoTrocada(rotacao)
+          ? { largura: altura, altura: largura }
+          : { largura, altura };
+      }
+
+      /**
+       * Registra um clique que chegou enquanto a foto já estava girando.
+       * A fila guarda a contagem por foto, então 3 cliques rápidos viram 3
+       * passos extras e nenhum é perdido (A3).
+       */
+      function registrarCliquePendente(fila, foto) {
+        const total = (fila.get(foto) || 0) + 1;
+        fila.set(foto, total);
+
+        return total;
+      }
+
+      /**
+       * Retira um clique da fila e informa se ainda há outro passo pendente
+       * depois do atual. Assim cada processamento concluído inicia no máximo
+       * um novo giro.
+       */
+      function retirarCliquePendente(fila, foto) {
+        const total = fila.get(foto) || 0;
+
+        if (total <= 0) {
+          fila.delete(foto);
+          return false;
+        }
+
+        if (total === 1) {
+          fila.delete(foto);
+        } else {
+          fila.set(foto, total - 1);
+        }
+
+        return true;
+      }
+      /* ROTACAO_FIM */
+
+      /**
+       * Ajuste A1 + A3: desenha a foto esticada para preencher 100% do canvas
+       * no tamanho final a 300 dpi, aplicando a rotação horária pedida
+       * (0, 90, 180 ou 270), e exporta em JPEG.
        * @returns {Promise<{ blob: Blob, buffer: ArrayBuffer, url: string,
        *   largura: number, altura: number, larguraOrig: number, alturaOrig: number }>}
        */
-      async function processarFoto(arquivo, indice) {
-        const imagem = await decodificarImagem(arquivo);
+      async function renderizarFoto(origem, largura, altura, rotacao) {
+        const imagem = await decodificarImagem(origem);
 
         try {
-          const tamanhoCm = tamanhoFinalCm(indice);
-          const largura = cmParaPixels(tamanhoCm.largura);
-          const altura = cmParaPixels(tamanhoCm.altura);
-
           const canvas = document.createElement("canvas");
           canvas.width = largura;
           canvas.height = altura;
@@ -1079,20 +1439,24 @@
           contexto.fillStyle = "#ffffff";
           contexto.fillRect(0, 0, largura, altura);
 
-          // "Contain": mesma escala nos dois eixos, sem cortar nem distorcer.
-          const escala = Math.min(largura / imagem.largura, altura / imagem.altura);
-          const desenhoLargura = imagem.largura * escala;
-          const desenhoAltura = imagem.altura * escala;
-
+          // Preenchimento total do canvas (Fase A1): estica a foto para cobrir
+          // a totalidade da área alvo, eliminando faixas brancas.
           contexto.imageSmoothingEnabled = true;
           contexto.imageSmoothingQuality = "high";
+
+          const desenho = areaDeDesenho(largura, altura, rotacao);
+
+          contexto.save();
+          contexto.translate(largura / 2, altura / 2);
+          contexto.rotate((normalizarRotacao(rotacao) * Math.PI) / 180);
           contexto.drawImage(
             imagem.fonte,
-            (largura - desenhoLargura) / 2,
-            (altura - desenhoAltura) / 2,
-            desenhoLargura,
-            desenhoAltura
+            -desenho.largura / 2,
+            -desenho.altura / 2,
+            desenho.largura,
+            desenho.altura
           );
+          contexto.restore();
 
           const blob = await new Promise((resolver, rejeitar) => {
             canvas.toBlob(
@@ -1120,6 +1484,22 @@
         } finally {
           imagem.liberar();
         }
+      }
+
+      /**
+       * RF07 + Ajuste A1 (orientação do usuário): aplica a orientação EXIF,
+       * estica a foto para preencher 100% do canvas no tamanho final a 300 dpi
+       * (eliminando faixas brancas nas bordas) e exporta em JPEG.
+       */
+      async function processarFoto(arquivo, indice, rotacao = 0) {
+        const tamanhoCm = tamanhoFinalCm(indice);
+
+        return renderizarFoto(
+          arquivo,
+          cmParaPixels(tamanhoCm.largura),
+          cmParaPixels(tamanhoCm.altura),
+          rotacao
+        );
       }
 
       /**
@@ -1169,9 +1549,220 @@
         elemento.replaceChildren();
       }
 
-      /** O botão só libera com modelo validado e pelo menos 1 foto (RF10). */
+      /* ORDENACAO_INICIO */
+      /**
+       * Troca duas posições da lista de fotos (RF06) sem alterar o array
+       * original. Devolve uma cópia mesmo quando os índices são inválidos.
+       * O bloco é lido por tests/ordenacao.test.js.
+       */
+      function trocarFotos(lista, origem, destino) {
+        const copia = Array.isArray(lista) ? lista.slice() : [];
+
+        if (
+          origem === destino ||
+          origem < 0 ||
+          origem >= copia.length ||
+          destino < 0 ||
+          destino >= copia.length
+        ) {
+          return copia;
+        }
+
+        [copia[origem], copia[destino]] = [copia[destino], copia[origem]];
+        return copia;
+      }
+
+      /**
+       * Remove a foto de uma posição e fecha o espaço, mantendo a ordem
+       * (RF06). Devolve uma cópia mesmo quando o índice é inválido.
+       */
+      function removerFotoNaLista(lista, indice) {
+        if (!Array.isArray(lista)) {
+          return [];
+        }
+
+        return lista.filter((_, posicao) => posicao !== indice);
+      }
+      /* ORDENACAO_FIM */
+
+      /**
+       * Guarda qual controle deve receber foco depois que a grade for
+       * redesenhada. Sem isso, a troca removeria o botão que o teclado
+       * acabou de acionar (RF06 e acessibilidade).
+       */
+      let focoPendente = null;
+
+      // A3: garante um passo de 90° por clique, mesmo com cliques rápidos.
+      // A fila conta os cliques por foto (Map), sem perder os excedentes.
+      const rotacoesEmAndamento = new WeakSet();
+      const rotacoesPendentes = new Map();
+      let rotacoesAtivas = 0;
+
+      function focarControlePendente() {
+        if (!focoPendente) {
+          return;
+        }
+
+        const { indice, acao } = focoPendente;
+        focoPendente = null;
+
+        const grade = indice === 0 ? gradeCapa : gradeRegistros;
+        const alvo = grade.querySelector(
+          `[data-indice="${indice}"][data-acao="${acao}"]`
+        );
+
+        if (alvo && !alvo.disabled) {
+          alvo.focus();
+          return;
+        }
+
+        const alternativa =
+          grade.querySelector(`[data-indice="${indice}"][data-acao="remover"]`) ||
+          gradeCapa.querySelector(".vaga__botao:not(:disabled)") ||
+          gradeRegistros.querySelector(".vaga__botao:not(:disabled)");
+
+        if (alternativa) {
+          alternativa.focus();
+        } else {
+          entradaFotos.focus();
+        }
+      }
+
+      /* NOME_ARQUIVO_INICIO */
+      const NOME_ARQUIVO_PADRAO = "relatorio-ensaio";
+      const NOME_ARQUIVO_LIMITE = 120;
+      const NOME_ARQUIVO_EXTENSAO = ".xlsx";
+      const NOME_ARQUIVO_RESERVADOS = new Set([
+        "CON",
+        "PRN",
+        "AUX",
+        "NUL",
+        ...Array.from({ length: 9 }, (_, indice) => `COM${indice + 1}`),
+        ...Array.from({ length: 9 }, (_, indice) => `LPT${indice + 1}`),
+      ]);
+      const NOME_ARQUIVO_PROIBIDOS = /[\\/:*?"<>|]/;
+      const NOME_ARQUIVO_CONTROLE = /[\u0000-\u001F]/;
+
+      /** Nome base do modelo, sem .xlsx; usa o padrão quando vazio (A2). */
+      function nomeBaseDoModelo(nomeModelo) {
+        const nome = String(nomeModelo ?? "")
+          .trim()
+          .replace(/\.xlsx$/i, "")
+          .trim();
+
+        return nome || NOME_ARQUIVO_PADRAO;
+      }
+
+      /** Remove um .xlsx digitado no fim, sem mexer no restante do texto (A2). */
+      function nomeBaseDigitado(nomeDigitado) {
+        return String(nomeDigitado ?? "").replace(/\.xlsx$/i, "");
+      }
+
+      /** Nome base efetivo: campo vazio usa o nome do modelo (A2). */
+      function nomeBaseResolvido(nomeDigitado, nomeModelo) {
+        return String(nomeDigitado ?? "") === ""
+          ? nomeBaseDoModelo(nomeModelo)
+          : nomeBaseDigitado(nomeDigitado);
+      }
+
+      /**
+       * Valida o nome digitado sem alterar o texto do campo (A2).
+       * @returns {{ ok: true, base: string } | { ok: false, erro: string }}
+       */
+      function validarNomeArquivo(nomeDigitado, nomeModelo) {
+        const digitado = String(nomeDigitado ?? "");
+        const base =
+          digitado === ""
+            ? nomeBaseDoModelo(nomeModelo)
+            : nomeBaseDigitado(digitado);
+
+        if (!base) {
+          return { ok: false, erro: "Informe um nome para o arquivo." };
+        }
+
+        if (base.length > NOME_ARQUIVO_LIMITE) {
+          return { ok: false, erro: `Máximo de ${NOME_ARQUIVO_LIMITE} caracteres.` };
+        }
+
+        if (NOME_ARQUIVO_CONTROLE.test(base)) {
+          return { ok: false, erro: "O nome não pode conter caracteres de controle." };
+        }
+
+        if (NOME_ARQUIVO_PROIBIDOS.test(base)) {
+          return { ok: false, erro: 'O nome não pode conter: \\ / : * ? " < > |' };
+        }
+
+        if (/[. ]$/.test(base)) {
+          return { ok: false, erro: "O nome não pode terminar com ponto ou espaço." };
+        }
+
+        const primeiroSegmento = base.split(".")[0].trim().toUpperCase();
+
+        if (NOME_ARQUIVO_RESERVADOS.has(primeiroSegmento)) {
+          return { ok: false, erro: "Nome reservado do sistema." };
+        }
+
+        return { ok: true, base };
+      }
+
+      /** Nome final do download, sempre com um único .xlsx (A2). */
+      function nomeArquivoResolvido(nomeDigitado, nomeModelo) {
+        return `${nomeBaseResolvido(nomeDigitado, nomeModelo)}${NOME_ARQUIVO_EXTENSAO}`;
+      }
+      /* NOME_ARQUIVO_FIM */
+
+      /** Nome do modelo carregado, ou vazio antes do carregamento. */
+      function nomeModeloAtual() {
+        return estado.modelo ? estado.modelo.nome : "";
+      }
+
+      /** Atualiza prévia, erro e botão a cada edição do nome (A2). */
+      function atualizarNomeSaida() {
+        const nomeModelo = nomeModeloAtual();
+        const resultado = validarNomeArquivo(nomeSaida.value, nomeModelo);
+        const base = nomeBaseResolvido(nomeSaida.value, nomeModelo);
+
+        const previa = `Será salvo como ${base}.xlsx.`;
+
+        previaNomeSaida.textContent = previa;
+        previaNomeSaida.title = previa;
+
+        if (resultado.ok) {
+          erroNomeSaida.textContent = "";
+          erroNomeSaida.classList.remove("campo-nome__erro--ativa");
+          campoNomeSaida.classList.remove("campo-nome--erro");
+          nomeSaida.removeAttribute("aria-invalid");
+        } else {
+          erroNomeSaida.textContent = resultado.erro;
+          erroNomeSaida.classList.add("campo-nome__erro--ativa");
+          campoNomeSaida.classList.add("campo-nome--erro");
+          nomeSaida.setAttribute("aria-invalid", "true");
+        }
+
+        atualizarBotaoGerar();
+      }
+
+      /** Ao carregar um modelo, volta o campo ao nome dele sem .xlsx (A2). */
+      function definirNomeSaidaPadrao(nomeModelo) {
+        nomeSaida.value = nomeBaseDoModelo(nomeModelo);
+        atualizarNomeSaida();
+      }
+
+      /**
+       * O botão só libera com modelo, 1 foto, nome válido, sem geração e sem
+       * rotação em andamento (RF10, A2 e A3): assim a planilha nunca recebe
+       * um buffer diferente do que aparece na miniatura.
+       */
       function podeGerar() {
-        return Boolean(estado.modelo) && estado.fotos.length > 0 && !estado.gerando;
+        const nome = validarNomeArquivo(nomeSaida.value, nomeModeloAtual());
+
+        return (
+          Boolean(estado.modelo) &&
+          estado.fotos.length > 0 &&
+          !estado.gerando &&
+          rotacoesAtivas === 0 &&
+          nome.ok
+        );
       }
 
       /** Reflete no botão se o relatório já pode ser gerado. */
@@ -1179,18 +1770,6 @@
         const habilitado = podeGerar();
         botaoGerar.disabled = !habilitado;
         botaoGerar.setAttribute("aria-disabled", String(!habilitado));
-      }
-
-      /**
-       * Nome do download derivado do modelo, sem alterar o arquivo original
-       * (RF11): "modelo.xlsx" vira "modelo-com-fotos.xlsx".
-       */
-      function nomeArquivoGerado(nomeModelo) {
-        const base = String(nomeModelo || "")
-          .trim()
-          .replace(/\.xlsx$/i, "");
-
-        return `${base || "relatorio-ensaio"}${SUFIXO_ARQUIVO}${EXTENSAO}`;
       }
 
       /** Mostra a barra de progresso com um texto e um percentual. */
@@ -1263,7 +1842,8 @@
         limparMensagemEm(mensagemFotos);
         limparMensagemEm(mensagemGerar);
         esconderProgresso();
-        atualizarBotaoGerar();
+        nomeSaida.value = "";
+        atualizarNomeSaida();
         definirEtapa(1);
       }
 
@@ -1290,6 +1870,193 @@
         return ponto < 0 ? "" : TIPO_POR_EXTENSAO[nome.slice(ponto)] || "";
       }
 
+      /** Cria um botão de seta ou de remoção com rótulo acessível. */
+      function criarControle(indice, acao, rotulo, simbolo, desabilitado) {
+        const botao = document.createElement("button");
+        botao.type = "button";
+        botao.className = `vaga__botao vaga__botao--${acao}`;
+        botao.dataset.indice = String(indice);
+        botao.dataset.acao = acao;
+        botao.setAttribute("aria-label", rotulo);
+        botao.title = rotulo;
+        botao.disabled = Boolean(desabilitado);
+
+        if (desabilitado) {
+          botao.setAttribute("aria-disabled", "true");
+        }
+
+        const icone = document.createElement("span");
+        icone.setAttribute("aria-hidden", "true");
+        icone.textContent = simbolo;
+        botao.append(icone);
+
+        botao.addEventListener("click", () => {
+          if (acao === "remover") {
+            removerFoto(indice);
+            return;
+          }
+
+          if (acao === "girar") {
+            girarFoto(indice);
+            return;
+          }
+
+          moverFoto(indice, acao === "esquerda" ? indice - 1 : indice + 1, acao);
+        });
+
+        return botao;
+      }
+
+      /** Troca a foto de posição e mantém o foco na mesma seta (RF06). */
+      function moverFoto(indice, destino, acao) {
+        if (estado.gerando || destino < 0 || destino >= estado.fotos.length) {
+          return;
+        }
+
+        estado.fotos = trocarFotos(estado.fotos, indice, destino);
+        focoPendente = { indice: destino, acao };
+        renderizarFotos();
+        limparMensagemEm(mensagemGerar);
+        esconderProgresso();
+        atualizarBotaoGerar();
+        definirEtapa(estado.fotos.length ? 3 : 2);
+        mostrarMensagemEm(
+          mensagemFotos,
+          "ok",
+          `Foto movida para ${POSICOES[destino]}.`
+        );
+      }
+
+      /**
+       * Gira a foto 90° no sentido horário (A3), redesenhando a miniatura e o
+       * buffer enviado à planilha a partir do arquivo original, sem perda
+       * acumulada e mantendo o canvas de 300 dpi com preenchimento total.
+       */
+      async function girarFoto(indice) {
+        const foto = estado.fotos[indice];
+
+        if (!foto || !foto.origem || estado.gerando) {
+          if (foto) {
+            rotacoesPendentes.delete(foto);
+          }
+          return;
+        }
+
+        // Cliques rápidos viram passos extras na fila, um por clique.
+        if (rotacoesEmAndamento.has(foto)) {
+          registrarCliquePendente(rotacoesPendentes, foto);
+          return;
+        }
+
+        rotacoesEmAndamento.add(foto);
+        rotacoesAtivas += 1;
+        atualizarBotaoGerar();
+
+        const rotacao = proximaRotacao(foto.rotacao);
+        let resultado;
+
+        try {
+          resultado = await renderizarFoto(
+            foto.origem,
+            foto.largura,
+            foto.altura,
+            rotacao
+          );
+        } catch (erro) {
+          console.error(erro);
+          rotacoesEmAndamento.delete(foto);
+          rotacoesAtivas -= 1;
+          rotacoesPendentes.delete(foto);
+          atualizarBotaoGerar();
+          mostrarMensagemEm(
+            mensagemFotos,
+            "erro",
+            "Não foi possível girar a foto.",
+            "Tente novamente ou remova e adicione a imagem de novo."
+          );
+          return;
+        }
+
+        rotacoesEmAndamento.delete(foto);
+        rotacoesAtivas -= 1;
+        atualizarBotaoGerar();
+
+        // A grade pode ter mudado durante o processamento (mover/remover).
+        const posicaoAtual = estado.fotos.indexOf(foto);
+
+        if (posicaoAtual < 0) {
+          URL.revokeObjectURL(resultado.url);
+          rotacoesPendentes.delete(foto);
+          return;
+        }
+
+        const urlAntiga = foto.url;
+
+        Object.assign(foto, resultado, { rotacao });
+
+        if (urlAntiga) {
+          URL.revokeObjectURL(urlAntiga);
+        }
+
+        focoPendente = { indice: posicaoAtual, acao: "girar" };
+        renderizarFotos();
+        limparMensagemEm(mensagemGerar);
+        esconderProgresso();
+        atualizarBotaoGerar();
+        definirEtapa(estado.fotos.length ? 3 : 2);
+        mostrarMensagemEm(
+          mensagemFotos,
+          "ok",
+          `Foto de ${POSICOES[posicaoAtual]} girada para ${rotacao}°.`
+        );
+
+        if (retirarCliquePendente(rotacoesPendentes, foto)) {
+          girarFoto(posicaoAtual);
+        }
+      }
+
+      /** Remove uma foto, fecha o espaço e atualiza contador e etapas. */
+      function removerFoto(indice) {
+        if (estado.gerando) {
+          return;
+        }
+
+        const foto = estado.fotos[indice];
+
+        if (!foto) {
+          return;
+        }
+
+        const totalDepois = estado.fotos.length - 1;
+        estado.fotos = removerFotoNaLista(estado.fotos, indice);
+
+        if (foto.url) {
+          URL.revokeObjectURL(foto.url);
+        }
+
+        if (totalDepois > 0) {
+          focoPendente = {
+            indice: Math.min(indice, totalDepois - 1),
+            acao: "remover",
+          };
+        }
+
+        renderizarFotos();
+        limparMensagemEm(mensagemGerar);
+        esconderProgresso();
+        atualizarBotaoGerar();
+        definirEtapa(estado.fotos.length ? 3 : 2);
+        mostrarMensagemEm(
+          mensagemFotos,
+          "ok",
+          `Foto removida de ${POSICOES[indice]}.`
+        );
+
+        if (!estado.fotos.length) {
+          entradaFotos.focus();
+        }
+      }
+
       /** Monta a vaga de uma posição: tracejada vazia ou com miniatura. */
       function criarVaga(indice, foto) {
         const item = document.createElement("li");
@@ -1297,6 +2064,11 @@
 
         if (!foto) {
           item.classList.add("vaga--vazia");
+
+          const icone = document.createElement("span");
+          icone.className = "vaga__vazio-icone";
+          icone.setAttribute("aria-hidden", "true");
+          icone.textContent = "+";
 
           const rotulo = document.createElement("span");
           rotulo.className = "vaga__rotulo";
@@ -1306,11 +2078,54 @@
           dica.className = "vaga__dica";
           dica.textContent = "Sem foto";
 
-          item.append(rotulo, dica);
+          item.append(icone, rotulo, dica);
           return item;
         }
 
         item.classList.add("vaga--preenchida");
+
+        const controles = document.createElement("div");
+        controles.className = "vaga__controles";
+
+        const esquerdaDesabilitada = indice === 0;
+        const direitaDesabilitada = indice >= estado.fotos.length - 1;
+        const rotuloEsquerda = esquerdaDesabilitada
+          ? `${POSICOES[indice]} já está na primeira posição`
+          : `Mover ${POSICOES[indice]} para a posição anterior (${POSICOES[indice - 1]})`;
+        const rotuloDireita = direitaDesabilitada
+          ? `Não há foto à direita de ${POSICOES[indice]}`
+          : `Mover ${POSICOES[indice]} para a posição seguinte (${POSICOES[indice + 1]})`;
+
+        controles.append(
+          criarControle(
+            indice,
+            "girar",
+            `Girar foto de ${POSICOES[indice]}`,
+            "⟳",
+            false
+          ),
+          criarControle(
+            indice,
+            "esquerda",
+            rotuloEsquerda,
+            "←",
+            esquerdaDesabilitada
+          ),
+          criarControle(
+            indice,
+            "direita",
+            rotuloDireita,
+            "→",
+            direitaDesabilitada
+          ),
+          criarControle(
+            indice,
+            "remover",
+            `Remover foto de ${POSICOES[indice]}`,
+            "×",
+            false
+          )
+        );
 
         const imagem = document.createElement("img");
         imagem.className = "vaga__imagem";
@@ -1325,7 +2140,12 @@
         arquivo.className = "vaga__arquivo";
         arquivo.textContent = foto.nome;
 
-        item.append(imagem, rotulo, arquivo);
+        const faixa = document.createElement("span");
+        faixa.className = "vaga__faixa";
+        faixa.setAttribute("aria-hidden", "true");
+        faixa.textContent = "⟳ girar · ← → reordenar · × remover";
+
+        item.append(controles, imagem, rotulo, arquivo, faixa);
         return item;
       }
 
@@ -1343,6 +2163,8 @@
         const total = estado.fotos.length;
         contadorFotos.textContent = `${total} de ${LIMITE_FOTOS} fotos`;
         contadorFotos.classList.toggle("contador--cheio", total === LIMITE_FOTOS);
+
+        focarControlePendente();
       }
 
       /**
@@ -1398,7 +2220,7 @@
           mensagemFotos,
           "carregando",
           arquivos.length === 1 ? "Processando 1 foto…" : `Processando ${arquivos.length} fotos…`,
-          "Aplicando orientação EXIF, ajuste sem corte e 300 dpi."
+          "Aplicando orientação EXIF, preenchimento total e 300 dpi."
         );
         await aguardarPintura();
 
@@ -1415,6 +2237,9 @@
               tipoOriginal: tipos[indice],
               extensao: "jpeg",
               tamanhoOriginal: arquivos[indice].size,
+              // A3: guarda o arquivo original para girar sem perda acumulada.
+              origem: arquivos[indice],
+              rotacao: 0,
               ...resultado,
             });
           }
@@ -1448,20 +2273,6 @@
           adicionadas === 1 ? "1 foto adicionada." : `${adicionadas} fotos adicionadas.`,
           `Posições preenchidas em ordem: ${POSICOES.slice(0, estado.fotos.length).join(", ")}.`
         );
-      }
-
-      /**
-       * Mede a área real da planilha em cm a partir da grade em pixels.
-       * No modelo da empresa a medida confere com a seção 5 do SPEC; no
-       * modelo de exemplo as linhas padrão deixam a capa mais baixa que a
-       * medida nominal, então prevalece a área real para a foto não cruzar
-       * as bordas da área (pendência P1 do SPEC).
-       */
-      function areaEmCm(grade) {
-        return {
-          larguraCm: grade.colunas.reduce((total, largura) => total + largura, 0) / PX_POR_CM,
-          alturaCm: grade.linhas.reduce((total, altura) => total + altura, 0) / PX_POR_CM,
-        };
       }
 
       /**
@@ -1521,14 +2332,15 @@
       /**
        * Gera o .xlsx com as fotos e dispara o download (RF10 e RF11).
        * `montarRelatorio` trabalha sobre uma cópia em memória do modelo, então
-       * o arquivo original nunca é alterado. O nome do download é derivado do
-       * modelo e o Blob usa o MIME oficial de .xlsx.
+       * o arquivo original nunca é alterado. O nome do download vem do campo
+       * "Nome do arquivo" (A2) e o Blob usa o MIME oficial de .xlsx.
        */
       async function gerarRelatorio() {
         if (!podeGerar()) {
           return;
         }
 
+        const nomeDownload = nomeArquivoResolvido(nomeSaida.value, nomeModeloAtual());
         estado.gerando = true;
         atualizarBotaoGerar();
         definirEtapa(3);
@@ -1549,15 +2361,14 @@
 
           exibirProgresso("Finalizando o arquivo…", 90);
           const blob = new Blob([buffer], { type: MIME_XLSX });
-          const nome = nomeArquivoGerado(estado.modelo && estado.modelo.nome);
 
-          baixarBlob(blob, nome);
+          baixarBlob(blob, nomeDownload);
           exibirProgresso("Planilha pronta.", 100);
           mostrarMensagemEm(
             mensagemGerar,
             "ok",
             "Relatório gerado com sucesso! ",
-            `Download iniciado: ${nome}`
+            `Download iniciado: ${nomeDownload}`
           );
         } catch (erro) {
           console.error(erro);
@@ -1637,7 +2448,7 @@
           atualizarCartao();
           habilitarFotos(true);
           limparMensagemEm(mensagemFotos);
-          atualizarBotaoGerar();
+          definirNomeSaidaPadrao(nome);
           definirEtapa(estado.fotos.length ? 3 : 2);
           mostrarMensagemEm(mensagem,
             "ok",
@@ -1750,6 +2561,7 @@
       });
 
       botaoGerar.addEventListener("click", gerarRelatorio);
+      nomeSaida.addEventListener("input", atualizarNomeSaida);
 
       limparMensagemEm(mensagem);
       limparMensagemEm(mensagemFotos);
@@ -1758,6 +2570,7 @@
       atualizarBotaoGerar();
       definirEtapa(1);
       atualizarCartao();
+      atualizarNomeSaida();
       renderizarFotos();
     })();
   </script>
